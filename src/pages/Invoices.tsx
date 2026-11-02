@@ -589,7 +589,7 @@ export default function InvoicesPage() {
     operator: inv.operator, airlineIATA: inv.airline_iata, flightRef: inv.flight_ref,
     description: inv.description, civilAviation: inv.civil_aviation, handling: inv.handling,
     airportCharges: inv.airport_charges, catering: inv.catering, other: inv.other,
-    subtotal: inv.subtotal, vat: inv.vat, total: inv.total, currency: inv.currency,
+    subtotal: inv.subtotal, vat: inv.vat, total: inv.total, currency: inv.currency, exchange_rate: (inv as any).exchange_rate, base_currency: (inv as any).base_currency,
     status: inv.status, notes: inv.notes,
     station: inv.station, billingPeriod: inv.billing_period,
     _isSecurity: ((inv.invoice_no || "").toUpperCase().includes("-SEC")) ||
