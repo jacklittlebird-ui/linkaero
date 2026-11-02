@@ -1122,7 +1122,8 @@ export default function SecurityServiceReportsPage() {
       const [mode, stage] = stepFilter.split(":") as ["at" | "done", any];
       rows = rows.filter(r => {
         const workflowStatus = getWorkflowDispatchStatus(r);
-        const invStatus = (invoiceStatusByFlight.get(normalizeFlightKey(String(r.flight_no || ""))) || "none") as "none" | "issued" | "paid";
+        const rawInv = (invoiceStatusByFlight.get(normalizeFlightKey(String(r.flight_no || ""))) || "none") as "none" | "issued" | "paid";
+        const invStatus = rawInv === "paid" && !hasSavedSecurityCharges(r as any) ? "issued" : rawInv;
         const opts = {
           isLinked: workflowStatus === "Completed",
           reviewStatus: r.review_status,
