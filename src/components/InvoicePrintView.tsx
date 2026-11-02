@@ -1,3 +1,4 @@
+import { egpTotal, fmtEgp, hasEgpTotal } from "@/lib/invoiceEgp";
 import { X, Download, AlertTriangle } from "lucide-react";
 
 export interface PrintableInvoice {
@@ -19,6 +20,8 @@ export interface PrintableInvoice {
   currency: string;
   status: string;
   notes: string;
+  exchange_rate?: number | null;
+  base_currency?: string | null;
 }
 
 interface InvoicePrintViewProps {
@@ -311,6 +314,12 @@ export default function InvoicePrintView({ invoice, onClose }: InvoicePrintViewP
                 <span>Total</span>
                 <span>{invoice.currency} {invoice.total.toFixed(2)}</span>
               </div>
+              {hasEgpTotal(invoice) && (
+                <div className="flex justify-between py-1.5 text-sm font-bold">
+                  <span>Total in EGP <span className="font-normal text-gray-500">(1 USD = {Number(invoice.exchange_rate).toFixed(2)} EGP)</span></span>
+                  <span className="font-mono">{fmtEgp(egpTotal(invoice.total, Number(invoice.exchange_rate)))}</span>
+                </div>
+              )}
             </div>
           </div>
 

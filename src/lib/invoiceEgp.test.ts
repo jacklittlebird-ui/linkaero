@@ -4,6 +4,7 @@ import { egpTotal, isEthiopianOperator, parseRate, hasEgpTotal } from "./invoice
 describe("Ethiopian EGP invoice total", () => {
   it("EGP total = USD total × rate", () => {
     expect(egpTotal(136.5, 48.5)).toBe(6620.25);
+    expect(egpTotal(4608, 56.11)).toBe(258554.88);
   });
   it("detects Ethiopian by name or ET code only", () => {
     expect(isEthiopianOperator("Ethiopian Airlines")).toBe(true);

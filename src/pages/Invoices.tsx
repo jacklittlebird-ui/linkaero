@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
-import { askEgpRate, isEthiopianOperator } from "@/lib/invoiceEgp";
+import { askEgpRate, egpTotal, fmtEgp, hasEgpTotal, isEthiopianOperator } from "@/lib/invoiceEgp";
 import { TablePagination, usePagination } from "@/components/ui/table-pagination";
 import {
   Search, Plus, Download, Upload, FileText, DollarSign,
@@ -387,7 +387,7 @@ export default function InvoicesPage() {
       if ((data as any)?.error) throw new Error((data as any).error);
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["journal_entries"] });
-      logAudit({ action: "approve", entity_type: "invoice", entity_id: inv.id, details: { invoice_no: inv.invoice_no, total: inv.total, currency: inv.currency, journal_entry_no: (data as any)?.entry_no } });
+      logAudit({ action: "approve", entity_type: "invoice", entity_id: inv.id, details: { invoice_no: inv.invoice_no, total: inv.total, currency: inv.currency, exchange_rate: (inv as any).exchange_rate, base_currency: (inv as any).base_currency, journal_entry_no: (data as any)?.entry_no } });
       toast({ title: "✅ Invoice Finalized", description: `Journal entry ${(data as any)?.entry_no} created and posted.` });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -589,7 +589,7 @@ export default function InvoicesPage() {
     operator: inv.operator, airlineIATA: inv.airline_iata, flightRef: inv.flight_ref,
     description: inv.description, civilAviation: inv.civil_aviation, handling: inv.handling,
     airportCharges: inv.airport_charges, catering: inv.catering, other: inv.other,
-    subtotal: inv.subtotal, vat: inv.vat, total: inv.total, currency: inv.currency,
+    subtotal: inv.subtotal, vat: inv.vat, total: inv.total, currency: inv.currency, exchange_rate: (inv as any).exchange_rate, base_currency: (inv as any).base_currency,
     status: inv.status, notes: inv.notes,
     station: inv.station, billingPeriod: inv.billing_period,
     _isSecurity: ((inv.invoice_no || "").toUpperCase().includes("-SEC")) ||
@@ -855,7 +855,7 @@ export default function InvoicesPage() {
     if (isSecurityGroup && isEthiopianOperator(group.airline)) {
       const rate = askEgpRate();
       if (!rate) { toast({ title: "Invoice not created", description: "An exchange rate is required for Ethiopian Airlines." }); return; }
-      Object.assign(inv, { exchange_rate: rate, exchange_rate_date: new Date().toISOString().slice(0, 10), base_currency: "EGP" });
+      Object.assign(inv, { exchange_rate: rate, exchange_rate_date: new Date().toISOString().slice(0, 10), base_currency: "EGP", base_total: egpTotal(Number((inv as any).total) || 0, rate) });
     }
     await add(inv as any);
     toast({ title: "✅ Invoice Created", description: `Draft invoice for ${group.airline} at ${group.station}` });
@@ -1235,7 +1235,7 @@ export default function InvoicesPage() {
     if (isEthiopianOperator(monthlyAirlineOperator)) {
       const rate = askEgpRate();
       if (!rate) { toast({ title: "Invoice not created", description: "An exchange rate is required for Ethiopian Airlines." }); return; }
-      Object.assign(inv, { exchange_rate: rate, exchange_rate_date: new Date().toISOString().slice(0, 10), base_currency: "EGP" });
+      Object.assign(inv, { exchange_rate: rate, exchange_rate_date: new Date().toISOString().slice(0, 10), base_currency: "EGP", base_total: egpTotal(Number((inv as any).total) || 0, rate) });
     }
     await add(inv as any);
     setShowMonthlyAirline(false);
@@ -1623,7 +1623,7 @@ export default function InvoicesPage() {
                   </td>
                   <td className="px-3 py-2.5 text-foreground">${(inv.subtotal || 0).toLocaleString()}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">${(inv.vat || 0).toLocaleString()}</td>
-                  <td className="px-3 py-2.5 font-bold text-success">${(inv.total || 0).toLocaleString()}</td>
+                  <td className="px-3 py-2.5 font-bold text-success">${(inv.total || 0).toLocaleString()}{hasEgpTotal(inv as any) && <div className="text-xs font-semibold text-muted-foreground">{fmtEgp(Number((inv as any).base_total) || egpTotal(inv.total || 0, Number((inv as any).exchange_rate)))}</div>}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{inv.currency}</td>
                   <td className="px-3 py-2.5"><StatusBadge s={inv.status} /></td>
                   <td className="px-3 py-2.5" onClick={e => e.stopPropagation()}>

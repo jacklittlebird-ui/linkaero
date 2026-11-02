@@ -139,7 +139,7 @@ export default function InvoiceDetailModal({ invoice: inv, onClose, onEdit, onFi
                     const r = askEgpRate(fx.rate);
                     if (!r) return;
                     const date = new Date().toISOString().slice(0, 10);
-                    const { error } = await supabase.from("invoices").update({ exchange_rate: r, exchange_rate_date: date, base_currency: "EGP" } as any).eq("id", inv.id);
+                    const { error } = await supabase.from("invoices").update({ exchange_rate: r, exchange_rate_date: date, base_currency: "EGP", base_total: egpTotal(Number(inv.total) || 0, r) } as any).eq("id", inv.id);
                     if (error) { window.alert(`Could not save the rate: ${error.message}`); return; }
                     setFx({ rate: r, base: "EGP" });
                   }}
