@@ -168,6 +168,10 @@ export default function SecurityInvoicePrintView({ invoice, onClose }: Props) {
       }
       coverBody.push(["", "VAT (Zero%)", fmtMoney(invoice.vat || 0, invoice.currency)]);
       coverBody.push(["", "Total", fmtMoney(invoice.total || 0, invoice.currency)]);
+      if (hasEgpTotal(invoice as any)) {
+        const rate = Number((invoice as any).exchange_rate);
+        coverBody.push(["", `Total in EGP (Rate: 1 USD = ${rate.toFixed(2)} EGP)`, fmtEgp(egpTotal(invoice.total || 0, rate))]);
+      }
       autoTable(pdf, {
         startY: 86,
         head: [["Station", "Details", "Amount"]],
@@ -494,6 +498,16 @@ export default function SecurityInvoicePrintView({ invoice, onClose }: Props) {
                       Total&nbsp;&nbsp;{fmtMoney(invoice.total, invoice.currency)}
                     </td>
                   </tr>
+                  {hasEgpTotal(invoice as any) && (
+                    <tr className="border-t border-gray-700">
+                      <td colSpan={2} className="px-3 py-2 border-r border-gray-700 text-xs">
+                        Rate: 1 USD = {Number((invoice as any).exchange_rate).toFixed(2)} EGP
+                      </td>
+                      <td className="px-3 py-2 text-right font-bold text-base">
+                        Total in EGP&nbsp;&nbsp;{fmtEgp(egpTotal(invoice.total, (invoice as any).exchange_rate))}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
 

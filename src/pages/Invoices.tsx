@@ -851,6 +851,11 @@ export default function InvoicesPage() {
       flight_ref: `${group.flights} flights`,
       notes: `${headerNote}\n__DETAIL__:${JSON.stringify(detailRows)}`,
     };
+    if (isSecurityGroup && isEthiopianOperator(group.airline)) {
+      const rate = askEgpRate();
+      if (!rate) { toast({ title: "Invoice not created", description: "An exchange rate is required for Ethiopian Airlines." }); return; }
+      Object.assign(inv, { exchange_rate: rate, exchange_rate_date: new Date().toISOString().slice(0, 10), base_currency: "EGP" });
+    }
     await add(inv as any);
     toast({ title: "✅ Invoice Created", description: `Draft invoice for ${group.airline} at ${group.station}` });
   };
@@ -1226,6 +1231,11 @@ export default function InvoicesPage() {
       flight_ref: `${rows.length} security flights`,
       notes: `${headerNote}\n__DETAIL__:${JSON.stringify(detailRows)}`,
     };
+    if (isEthiopianOperator(monthlyAirlineOperator)) {
+      const rate = askEgpRate();
+      if (!rate) { toast({ title: "Invoice not created", description: "An exchange rate is required for Ethiopian Airlines." }); return; }
+      Object.assign(inv, { exchange_rate: rate, exchange_rate_date: new Date().toISOString().slice(0, 10), base_currency: "EGP" });
+    }
     await add(inv as any);
     setShowMonthlyAirline(false);
     toast({ title: "✅ Monthly Security Invoice Created", description: `${monthlyAirlineOperator} — ${monthlyAirlineMonth} (${rows.length} security assignments).` });
