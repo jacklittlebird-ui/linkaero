@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
-import { askEgpRate, isEthiopianOperator } from "@/lib/invoiceEgp";
+import { askEgpRate, egpTotal, isEthiopianOperator } from "@/lib/invoiceEgp";
 import { TablePagination, usePagination } from "@/components/ui/table-pagination";
 import {
   Search, Plus, Download, Upload, FileText, DollarSign,
@@ -855,7 +855,7 @@ export default function InvoicesPage() {
     if (isSecurityGroup && isEthiopianOperator(group.airline)) {
       const rate = askEgpRate();
       if (!rate) { toast({ title: "Invoice not created", description: "An exchange rate is required for Ethiopian Airlines." }); return; }
-      Object.assign(inv, { exchange_rate: rate, exchange_rate_date: new Date().toISOString().slice(0, 10), base_currency: "EGP" });
+      Object.assign(inv, { exchange_rate: rate, exchange_rate_date: new Date().toISOString().slice(0, 10), base_currency: "EGP", base_total: egpTotal(Number((inv as any).total) || 0, rate) });
     }
     await add(inv as any);
     toast({ title: "✅ Invoice Created", description: `Draft invoice for ${group.airline} at ${group.station}` });
@@ -1235,7 +1235,7 @@ export default function InvoicesPage() {
     if (isEthiopianOperator(monthlyAirlineOperator)) {
       const rate = askEgpRate();
       if (!rate) { toast({ title: "Invoice not created", description: "An exchange rate is required for Ethiopian Airlines." }); return; }
-      Object.assign(inv, { exchange_rate: rate, exchange_rate_date: new Date().toISOString().slice(0, 10), base_currency: "EGP" });
+      Object.assign(inv, { exchange_rate: rate, exchange_rate_date: new Date().toISOString().slice(0, 10), base_currency: "EGP", base_total: egpTotal(Number((inv as any).total) || 0, rate) });
     }
     await add(inv as any);
     setShowMonthlyAirline(false);
