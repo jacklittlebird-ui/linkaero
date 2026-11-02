@@ -227,17 +227,13 @@ const hasSavedSecurityCharges = (row: { review_status?: string | null; reviewed_
   // security charges. "Ready for Billing" alone is NOT enough — Operations can
   // also set that status (e.g. approving a Modified report), which must keep
   // step 4 open until Accounts Receivable actually reviews the charges.
-  // An issued invoice is definitive proof the charges were reviewed & billed:
-  // once invoiced, step 4 stays complete forever.
-  if ((row as any).invoiced_at) return true;
+  // Strict rule: step 4 completes ONLY when the Receivables portal reviewed
+  // and marked the record (reviewed_by = Receivables + charges saved / Ready
+  // for Billing). Invoices or timestamps alone never complete it.
+  if (!isReceivablesReviewer(row.reviewed_by)) return false;
   if ((row as any).charges_saved_at) return true;
   const value = String(row.review_status || "").trim().toLowerCase();
-  if (value !== "ready for billing") return false;
-  if (!isReceivablesReviewer(row.reviewed_by)) return false;
-  const amount = Number(row.total_security_charges || 0);
-  const lines = row.charges_breakdown;
-  const hasLines = Array.isArray(lines) ? lines.length > 0 : !!lines;
-  return amount > 0 || hasLines;
+  return value === "ready for billing";
 };
 
 
