@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { egpTotal, fmtEgp, hasEgpTotal } from "@/lib/invoiceEgp";
 import { X, Printer, Download, FileText, Sheet } from "lucide-react";
 import linkAeroLogo from "@/assets/linkaero-logo.png";
 import ighcLogo from "@/assets/ighc-logo.jpg";

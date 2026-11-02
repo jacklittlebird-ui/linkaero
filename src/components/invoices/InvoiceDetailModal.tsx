@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { askEgpRate, egpTotal, fmtEgp, hasEgpTotal, isEthiopianOperator } from "@/lib/invoiceEgp";
 import { X, FileText, DollarSign, Plane, Calendar, ShieldCheck, Printer, Clock, CheckCircle, AlertCircle, XCircle, BookOpen, CreditCard, History as HistoryIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateDMY } from "@/lib/utils";
