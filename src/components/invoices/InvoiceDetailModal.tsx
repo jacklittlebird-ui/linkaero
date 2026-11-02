@@ -46,6 +46,7 @@ function DetailRow({ label, value, mono }: { label: string; value: React.ReactNo
 export default function InvoiceDetailModal({ invoice: inv, onClose, onEdit, onFinalize, onPrint }: Props) {
   const st = statusStyles[inv.status] || statusStyles.Draft;
   const daysUntilDue = Math.ceil((new Date(inv.due_date).getTime() - Date.now()) / 86400000);
+  const [fx, setFx] = useState<{ rate: number | null; base: string | null }>({ rate: (inv as any).exchange_rate ?? null, base: (inv as any).base_currency ?? null });
 
   // Previous invoice numbers, logged automatically whenever the number is edited.
   const [history, setHistory] = useState<NoHistoryRow[]>([]);
@@ -127,6 +128,28 @@ export default function InvoiceDetailModal({ invoice: inv, onClose, onEdit, onFi
             {inv.sent_at && <DetailRow label="Sent At" value={formatDateDMY(inv.sent_at)} />}
             {inv.payment_date && <DetailRow label="Payment Date" value={formatDateDMY(inv.payment_date)} />}
           </div>
+
+          {isEthiopianOperator(inv.operator, inv.airline_iata) && (
+            <div className="bg-muted/30 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5"><DollarSign size={12} /> Total in EGP</h3>
+                <button
+                  onClick={async () => {
+                    const r = askEgpRate(fx.rate);
+                    if (!r) return;
+                    const date = new Date().toISOString().slice(0, 10);
+                    const { error } = await supabase.from("invoices").update({ exchange_rate: r, exchange_rate_date: date, base_currency: "EGP" } as any).eq("id", inv.id);
+                    if (error) { window.alert(`Could not save the rate: ${error.message}`); return; }
+                    setFx({ rate: r, base: "EGP" });
+                  }}
+                  className="px-2 py-1 rounded-md border border-border text-xs font-semibold hover:bg-muted"
+                >{fx.rate ? "Edit rate" : "Enter rate"}</button>
+              </div>
+              <DetailRow label={`Total (${inv.currency || "USD"})`} value={`${inv.currency || "USD"} ${(Number(inv.total) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} mono />
+              <DetailRow label="Exchange Rate" value={hasEgpTotal({ exchange_rate: fx.rate, base_currency: fx.base }) ? `1 USD = ${Number(fx.rate).toFixed(2)} EGP` : "Not entered"} mono />
+              <DetailRow label="Total in EGP" value={hasEgpTotal({ exchange_rate: fx.rate, base_currency: fx.base }) ? fmtEgp(egpTotal(inv.total, fx.rate!)) : "—"} mono />
+            </div>
+          )}
 
           {/* Invoice number history */}
           {history.length > 0 && (
