@@ -2774,9 +2774,11 @@ export default function SecurityServiceReportsPage() {
                             // Ready for Billing — even before the invoice is paid.
                             const chargesPersisted = hasSavedSecurityCharges(r as any);
                             const baseInvStatus = invoiceStatusByFlight.get(normalizeFlightKey(String(flightNo || r.flight_no || ""))) || "none";
+                            const chargesSaved = chargesPersisted;
+                            // A paid invoice never completes step 4 on its own —
+                            // only a Receivables review does.
                             const invStatus: "none" | "issued" | "paid" =
-                              baseInvStatus === "paid" ? "paid" : baseInvStatus;
-                            const chargesSaved = chargesSavedIds.has(r.id) || chargesPersisted;
+                              baseInvStatus === "paid" && !chargesSaved ? "issued" : baseInvStatus;
                             return (
                               <PipelineStepper
                                 currentStage={derivePipelineStage({
