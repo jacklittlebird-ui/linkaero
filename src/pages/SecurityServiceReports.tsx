@@ -227,17 +227,13 @@ const hasSavedSecurityCharges = (row: { review_status?: string | null; reviewed_
   // security charges. "Ready for Billing" alone is NOT enough — Operations can
   // also set that status (e.g. approving a Modified report), which must keep
   // step 4 open until Accounts Receivable actually reviews the charges.
-  // An issued invoice is definitive proof the charges were reviewed & billed:
-  // once invoiced, step 4 stays complete forever.
-  if ((row as any).invoiced_at) return true;
+  // Strict rule: step 4 completes ONLY when the Receivables portal reviewed
+  // and marked the record (reviewed_by = Receivables + charges saved / Ready
+  // for Billing). Invoices or timestamps alone never complete it.
+  if (!isReceivablesReviewer(row.reviewed_by)) return false;
   if ((row as any).charges_saved_at) return true;
   const value = String(row.review_status || "").trim().toLowerCase();
-  if (value !== "ready for billing") return false;
-  if (!isReceivablesReviewer(row.reviewed_by)) return false;
-  const amount = Number(row.total_security_charges || 0);
-  const lines = row.charges_breakdown;
-  const hasLines = Array.isArray(lines) ? lines.length > 0 : !!lines;
-  return amount > 0 || hasLines;
+  return value === "ready for billing";
 };
 
 
@@ -1126,7 +1122,8 @@ export default function SecurityServiceReportsPage() {
       const [mode, stage] = stepFilter.split(":") as ["at" | "done", any];
       rows = rows.filter(r => {
         const workflowStatus = getWorkflowDispatchStatus(r);
-        const invStatus = (invoiceStatusByFlight.get(normalizeFlightKey(String(r.flight_no || ""))) || "none") as "none" | "issued" | "paid";
+        const rawInv = (invoiceStatusByFlight.get(normalizeFlightKey(String(r.flight_no || ""))) || "none") as "none" | "issued" | "paid";
+        const invStatus = rawInv === "paid" && !hasSavedSecurityCharges(r as any) ? "issued" : rawInv;
         const opts = {
           isLinked: workflowStatus === "Completed",
           reviewStatus: r.review_status,
@@ -2778,9 +2775,11 @@ export default function SecurityServiceReportsPage() {
                             // Ready for Billing — even before the invoice is paid.
                             const chargesPersisted = hasSavedSecurityCharges(r as any);
                             const baseInvStatus = invoiceStatusByFlight.get(normalizeFlightKey(String(flightNo || r.flight_no || ""))) || "none";
+                            const chargesSaved = chargesPersisted;
+                            // A paid invoice never completes step 4 on its own —
+                            // only a Receivables review does.
                             const invStatus: "none" | "issued" | "paid" =
-                              baseInvStatus === "paid" ? "paid" : baseInvStatus;
-                            const chargesSaved = chargesSavedIds.has(r.id) || chargesPersisted;
+                              baseInvStatus === "paid" && !chargesSaved ? "issued" : baseInvStatus;
                             return (
                               <PipelineStepper
                                 currentStage={derivePipelineStage({
