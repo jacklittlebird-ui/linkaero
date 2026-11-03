@@ -155,7 +155,7 @@ export default function SecurityInvoicePrintView({ invoice, onClose }: Props) {
         ["Reg. No", "19511 Kasr El Nile"],
         ["Bill To", invoice.operator || "Air Cairo"],
         ["Period", invoice.billingPeriod || `${periodFrom} – ${periodTo}`],
-        ["Currency", invoice.currency || "USD"],
+        ["Currency", hasEgpTotal(invoice as any) ? "EGP" : (invoice.currency || "USD")],
       ];
       meta.forEach(([k, v], i) => {
         pdf.text(`${k}:`, left, 38 + i * 6);
@@ -271,7 +271,7 @@ export default function SecurityInvoicePrintView({ invoice, onClose }: Props) {
       ["Issued On", formatDateDMY(invoice.date)],
       ["Bill To", invoice.operator],
       ["Period", invoice.billingPeriod || `${periodFrom} – ${periodTo}`],
-      ["Currency", invoice.currency],
+      ["Currency", hasEgpTotal(invoice as any) ? "EGP" : invoice.currency],
       [],
       ["Station", "Details", "Amount"],
     ];
