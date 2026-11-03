@@ -245,3 +245,11 @@ export function backfillSecurityDetail(
   });
   return { rows, filledCount };
 }
+
+/** Columns removed from Ethiopian Airlines invoices (screen, print, PDF, Excel). */
+export const ETHIOPIAN_HIDDEN_COLUMNS = ["Service Type", "SKD", "OT (h)"] as const;
+
+export function columnsForOperator(cols: readonly string[], hideEthiopian: boolean): readonly string[] {
+  if (!hideEthiopian) return cols;
+  return cols.filter(c => !(ETHIOPIAN_HIDDEN_COLUMNS as readonly string[]).includes(c));
+}

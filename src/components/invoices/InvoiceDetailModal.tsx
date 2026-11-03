@@ -3,7 +3,7 @@ import { askEgpRate, egpTotal, fmtEgp, hasEgpTotal, isEthiopianOperator } from "
 import { X, FileText, DollarSign, Plane, Calendar, ShieldCheck, Printer, Clock, CheckCircle, AlertCircle, XCircle, BookOpen, CreditCard, History as HistoryIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateDMY } from "@/lib/utils";
-import { parseSecurityDetail, resolveDetailOvertimeHours, SECURITY_INVOICE_COLUMNS, type SecurityDetailRow } from "@/lib/securityInvoiceDetail";
+import { parseSecurityDetail, resolveDetailOvertimeHours, SECURITY_INVOICE_COLUMNS, columnsForOperator, type SecurityDetailRow } from "@/lib/securityInvoiceDetail";
 
 type NoHistoryRow = { id: string; old_invoice_no: string | null; new_invoice_no: string; changed_at: string };
 
@@ -184,7 +184,7 @@ export default function InvoiceDetailModal({ invoice: inv, onClose, onEdit, onFi
                 <table className="w-full text-[11px] border-collapse">
                   <thead>
                     <tr className="bg-muted/60">
-                      {SECURITY_INVOICE_COLUMNS.map(h => (
+                      {columnsForOperator(SECURITY_INVOICE_COLUMNS, isEthiopianOperator(inv.operator, inv.airline_iata)).map(h => (
                         <th key={h} className="border border-border px-1.5 py-1 text-center font-bold text-foreground whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -202,11 +202,11 @@ export default function InvoiceDetailModal({ invoice: inv, onClose, onEdit, onFi
                         <td className="border border-border px-1.5 py-1 text-center font-mono">{r.flight || "—"}</td>
                         <td className="border border-border px-1.5 py-1 text-center font-mono">{r.reg || "—"}</td>
                         <td className="border border-border px-1.5 py-1 text-center">{r.route || "—"}</td>
-                        <td className="border border-border px-1.5 py-1 text-center">{r.serviceType || r.type || "—"}</td>
+                        {!isEthiopianOperator(inv.operator, inv.airline_iata) && <td className="border border-border px-1.5 py-1 text-center">{r.serviceType || r.type || "—"}</td>}
                         <td className="border border-border px-1.5 py-1 text-center">{r.actualStart || "—"}</td>
                         <td className="border border-border px-1.5 py-1 text-center">{r.actualEnd || "—"}</td>
                         <td className="border border-border px-1.5 py-1 text-right font-mono">{r.durationHours != null ? Number(r.durationHours).toFixed(2) : "—"}</td>
-                        <td className="border border-border px-1.5 py-1 text-right font-mono">{resolveDetailOvertimeHours(r).toFixed(2)}</td>
+                        {!isEthiopianOperator(inv.operator, inv.airline_iata) && <td className="border border-border px-1.5 py-1 text-right font-mono">{resolveDetailOvertimeHours(r).toFixed(2)}</td>}
                         <td className="border border-border px-1.5 py-1 text-right font-mono">{fmtN((r.handling || 0) + (r.other || 0))}</td>
                       </tr>
                     ))}
