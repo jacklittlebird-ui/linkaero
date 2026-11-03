@@ -47,6 +47,23 @@ function DetailRow({ label, value, mono }: { label: string; value: React.ReactNo
 export default function InvoiceDetailModal({ invoice: inv, onClose, onEdit, onFinalize, onPrint }: Props) {
   const st = statusStyles[inv.status] || statusStyles.Draft;
   const daysUntilDue = Math.ceil((new Date(inv.due_date).getTime() - Date.now()) / 86400000);
+  const [issuedOn, setIssuedOn] = useState<string>(inv.date);
+  const editIssuedOn = async () => {
+    const cur = formatDateDMY(issuedOn);
+    while (true) {
+      const v = window.prompt("Issued On date (DD/MM/YYYY)", cur);
+      if (v === null) return;
+      const m = v.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      const iso = m ? `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}` : "";
+      const d = iso ? new Date(iso + "T00:00:00Z") : null;
+      if (!d || isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== iso) { window.alert("Please enter a valid date as DD/MM/YYYY."); continue; }
+      const { error } = await supabase.from("invoices").update({ date: iso } as any).eq("id", inv.id);
+      if (error) { window.alert(`Could not save the date: ${error.message}`); return; }
+      (inv as any).date = iso;
+      setIssuedOn(iso);
+      return;
+    }
+  };
   const [fx, setFx] = useState<{ rate: number | null; base: string | null }>({ rate: (inv as any).exchange_rate ?? null, base: (inv as any).base_currency ?? null });
 
   // Previous invoice numbers, logged automatically whenever the number is edited.
@@ -123,7 +140,10 @@ export default function InvoiceDetailModal({ invoice: inv, onClose, onEdit, onFi
           {/* Dates */}
           <div className="bg-muted/30 rounded-lg p-4">
             <h3 className="text-xs font-bold text-info uppercase tracking-wider mb-2 flex items-center gap-1.5"><Calendar size={12} /> Dates</h3>
-            <DetailRow label="Invoice Date" value={formatDateDMY(inv.date)} />
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex-1"><DetailRow label="Issued On" value={formatDateDMY(issuedOn)} /></div>
+              <button onClick={editIssuedOn} className="px-2 py-1 rounded-md border border-border text-xs font-semibold hover:bg-muted">Edit</button>
+            </div>
             <DetailRow label="Due Date" value={formatDateDMY(inv.due_date)} />
             {inv.finalized_at && <DetailRow label="Finalized At" value={formatDateDMY(inv.finalized_at)} />}
             {inv.sent_at && <DetailRow label="Sent At" value={formatDateDMY(inv.sent_at)} />}
