@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { egpTotal, fmtEgp, hasEgpTotal } from "@/lib/invoiceEgp";
+import { egpTotal, fmtEgp, hasEgpTotal, isEthiopianOperator } from "@/lib/invoiceEgp";
+import { columnsForOperator } from "@/lib/securityInvoiceDetail";
 import { X, Printer, Download, FileText, Sheet } from "lucide-react";
 import linkAeroLogo from "@/assets/linkaero-logo.png";
 import ighcLogo from "@/assets/ighc-logo.jpg";
@@ -193,7 +194,8 @@ export default function SecurityInvoicePrintView({ invoice, onClose }: Props) {
       ) => {
         if (!rows.length) return;
         const showSkd = amountKey === "handling";
-        const cols: readonly string[] = showSkd ? SECURITY_ANNEX_COLUMNS : EXTRA_ANNEX_COLUMNS;
+        const hideEt = isEthiopianOperator(invoice.operator, (invoice as any).airline_iata);
+        const cols: readonly string[] = columnsForOperator(showSkd ? SECURITY_ANNEX_COLUMNS : EXTRA_ANNEX_COLUMNS, hideEt);
         const sorted = [...rows].sort((a, b) => {
           const ka = (a.arrDate || a.depDate || a.date || "") + (a.flight || "");
           const kb = (b.arrDate || b.depDate || b.date || "") + (b.flight || "");
@@ -207,10 +209,10 @@ export default function SecurityInvoicePrintView({ invoice, onClose }: Props) {
             r.flight || "—",
             r.reg || "—",
             r.route || "—",
-            r.serviceType || r.type || "—",
           ];
-          if (showSkd) row.push(r.skdType || "—");
-          row.push(resolveDetailOvertimeHours(r).toFixed(2));
+          if (!hideEt) row.push(r.serviceType || r.type || "—");
+          if (showSkd && !hideEt) row.push(r.skdType || "—");
+          if (!hideEt) row.push(resolveDetailOvertimeHours(r).toFixed(2));
           row.push((Number(r[amountKey]) || 0).toFixed(2));
           return row;
         });
@@ -288,7 +290,8 @@ export default function SecurityInvoicePrintView({ invoice, onClose }: Props) {
     const addAnnexSheet = (st: string, title: string, rows: DetailRow[], amountKey: "handling" | "other", total: number) => {
       if (!rows.length) return;
       const showSkd = amountKey === "handling";
-      const cols: readonly string[] = showSkd ? SECURITY_ANNEX_COLUMNS : EXTRA_ANNEX_COLUMNS;
+      const hideEt = isEthiopianOperator(invoice.operator, (invoice as any).airline_iata);
+        const cols: readonly string[] = columnsForOperator(showSkd ? SECURITY_ANNEX_COLUMNS : EXTRA_ANNEX_COLUMNS, hideEt);
       const sorted = [...rows].sort((a, b) => {
         const ka = (a.arrDate || a.depDate || a.date || "") + (a.flight || "");
         const kb = (b.arrDate || b.depDate || b.date || "") + (b.flight || "");
@@ -308,10 +311,10 @@ export default function SecurityInvoicePrintView({ invoice, onClose }: Props) {
           r.flight || "",
           r.reg || "",
           r.route || "",
-          r.serviceType || r.type || "",
         ];
-        if (showSkd) row.push(r.skdType || "");
-        row.push(Number(resolveDetailOvertimeHours(r).toFixed(2)));
+        if (!hideEt) row.push(r.serviceType || r.type || "");
+        if (showSkd && !hideEt) row.push(r.skdType || "");
+        if (!hideEt) row.push(Number(resolveDetailOvertimeHours(r).toFixed(2)));
         row.push(Number((Number(r[amountKey]) || 0).toFixed(2)));
         aoa.push(row);
       });
@@ -540,7 +543,8 @@ export default function SecurityInvoicePrintView({ invoice, onClose }: Props) {
                 key: string,
               ) => {
                 const showSkd = amountKey === "handling";
-                const columns: readonly string[] = showSkd ? SECURITY_ANNEX_COLUMNS : EXTRA_ANNEX_COLUMNS;
+                const hideEt = isEthiopianOperator(invoice.operator, (invoice as any).airline_iata);
+        const columns: readonly string[] = columnsForOperator(showSkd ? SECURITY_ANNEX_COLUMNS : EXTRA_ANNEX_COLUMNS, hideEt);
                 const sorted = [...rows].sort((a, b) => {
                   const ka = (a.arrDate || a.depDate || a.date || "") + (a.flight || "");
                   const kb = (b.arrDate || b.depDate || b.date || "") + (b.flight || "");
@@ -605,11 +609,11 @@ export default function SecurityInvoicePrintView({ invoice, onClose }: Props) {
                                 <td className="border border-gray-800 px-1.5 py-1 text-center">{r.flight || "—"}</td>
                                 <td className="border border-gray-800 px-1.5 py-1 text-center">{r.reg || "—"}</td>
                                 <td className="border border-gray-800 px-1.5 py-1 text-center">{r.route || "—"}</td>
-                                <td className="border border-gray-800 px-1.5 py-1 text-left">{r.serviceType || r.type || "—"}</td>
-                                {showSkd && (
+                                {!hideEt && <td className="border border-gray-800 px-1.5 py-1 text-left">{r.serviceType || r.type || "—"}</td>}
+                                {showSkd && !hideEt && (
                                   <td className="border border-gray-800 px-1.5 py-1 text-center">{r.skdType || "—"}</td>
                                 )}
-                                <td className="border border-gray-800 px-1.5 py-1 text-center">{resolveDetailOvertimeHours(r).toFixed(2)}</td>
+                                {!hideEt && <td className="border border-gray-800 px-1.5 py-1 text-center">{resolveDetailOvertimeHours(r).toFixed(2)}</td>}
                                 <td className="border border-gray-800 px-1.5 py-1 text-right whitespace-nowrap">{fmtMoney(Number(r[amountKey]) || 0, invoice.currency)}</td>
                               </tr>
                             ))}
