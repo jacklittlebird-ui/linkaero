@@ -12,6 +12,7 @@ export type SecurityDetailRow = {
   route?: string;
   reg?: string;
   station?: string;
+  airline?: string;
   type?: string;
   serviceType?: string;
   aircraftType?: string;
@@ -152,6 +153,7 @@ export function parseSecurityDetail(notes: string | null | undefined): {
         reg: r.reg || "",
         route: r.route || "",
         station: r.station || "",
+        airline: r.airline || "",
         type: r.type || "",
         serviceType: r.serviceType || "",
         aircraftType: r.aircraftType || "",

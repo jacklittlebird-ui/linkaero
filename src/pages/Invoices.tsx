@@ -26,6 +26,7 @@ import { toast } from "@/hooks/use-toast";
 import { useChannel } from "@/contexts/ChannelContext";
 import InvoicePrintView from "@/components/InvoicePrintView";
 import SecurityInvoicePrintView from "@/components/invoices/SecurityInvoicePrintView";
+import AirFranceInvoicePrintView from "@/components/invoices/AirFranceInvoicePrintView";
 import InvoiceDetailModal from "@/components/invoices/InvoiceDetailModal";
 import { logAudit } from "@/lib/auditLogger";
 import { parseSecurityDetail, serializeSecurityDetail, backfillSecurityDetail, resolveDetailOvertimeHours, type SecurityDetailRow } from "@/lib/securityInvoiceDetail";
@@ -1008,9 +1009,12 @@ export default function InvoicesPage() {
 
 
   const monthlySecurityPreview = useMemo(() => {
+    const selOp = monthlyAirlineOperator.toLowerCase().trim();
+    const afGroup = selOp === "air france";
     const baseRows = (dispatches || []).filter((d: any) => {
+      const al = (d.airline || "").toLowerCase().trim();
       return isDispatchBillingComplete(d) &&
-        d.airline?.toLowerCase().trim() === monthlyAirlineOperator.toLowerCase().trim() &&
+        (al === selOp || (afGroup && al === "air france cargo")) &&
         resolveDispatchBillingDate(d).startsWith(monthlyAirlineMonth);
     });
     // Enrich each row with effective charges (live-computed wins over stored).
@@ -1198,9 +1202,10 @@ export default function InvoicesPage() {
         date: d.flight_date || "", flight: d.flight_no || "",
         arrDate: fi.arrDate || d.flight_date || "",
         depDate: fi.depDate || d.flight_date || "",
-        reg: d.registration || fi.reg || "",
+        reg: d.registration || d.fs_registration || fi.reg || "",
         route: d.route || fi.route || "",
         station: d.station || "",
+        airline: d.airline || "",
         type: buildServiceTypeLabel(d),
         serviceType: d.service_type || "",
         aircraftType: fi.aircraftType || "",
@@ -2398,7 +2403,9 @@ export default function InvoicesPage() {
       )}
 
       {printInvoice && (
-        printInvoice._isSecurity ? (
+        printInvoice._isSecurity && /^air\s*france/i.test(printInvoice.operator || "") ? (
+          <AirFranceInvoicePrintView invoice={printInvoice} onClose={() => setPrintInvoice(null)} />
+        ) : printInvoice._isSecurity ? (
           <SecurityInvoicePrintView invoice={printInvoice} onClose={() => setPrintInvoice(null)} />
         ) : (
           <InvoicePrintView invoice={printInvoice} onClose={() => setPrintInvoice(null)} />
