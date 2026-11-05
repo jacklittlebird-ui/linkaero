@@ -277,7 +277,9 @@ export default function InvoicesPage() {
   const [printInvoice, setPrintInvoice] = useState<any>(null);
   const [detailInvoice, setDetailInvoice] = useState<InvoiceRow | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [deleteTarget, setDeleteTarget] = useState<{ ids: string[]; label: string } | null>(null);
+  const [deleteTarget, setDeleteTargetRaw] = useState<{ ids: string[]; label: string } | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const setDeleteTarget = (t: { ids: string[]; label: string } | null) => { setDeleteConfirmText(""); setDeleteTargetRaw(t); };
   const [isDeleting, setIsDeleting] = useState(false);
   const [showBillingPreview, setShowBillingPreview] = useState(false);
   const [billingMonth, setBillingMonth] = useState(new Date().toISOString().slice(0, 7));
@@ -2371,19 +2373,32 @@ export default function InvoicesPage() {
                 ? `Delete ${deleteTarget.ids.length} invoices?`
                 : "Delete invoice?"}
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete{" "}
-              <span className="font-semibold text-foreground">
-                {deleteTarget?.label}
-              </span>
-              . This action cannot be undone, and a record of the deletion will be written to the audit log.
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm">
+                <div className="border-l-4 border-destructive bg-destructive/10 p-3 rounded-sm text-foreground space-y-2">
+                  <p className="font-bold uppercase tracking-wide text-destructive">Warning Letter — Invoice Deletion</p>
+                  <p>You are about to permanently delete <span className="font-semibold">{deleteTarget?.label}</span>.</p>
+                  <p>Deleting an invoice removes it from billing, receivables and accounting records. This cannot be undone. Your name and the time of deletion will be written to the audit log.</p>
+                  <p>Only delete an invoice if it was created by mistake. To stop an invoice being used, change its status to Cancelled instead.</p>
+                </div>
+                <div>
+                  <label htmlFor="confirm-delete-input" className="block text-xs font-semibold text-foreground mb-1">Type DELETE to confirm</label>
+                  <input
+                    id="confirm-delete-input"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    className="w-full border border-input rounded-md px-3 py-2 bg-background text-foreground"
+                    autoComplete="off"
+                  />
+                </div>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={(e) => { e.preventDefault(); confirmDelete(); }}
-              disabled={isDeleting}
+              onClick={(e) => { e.preventDefault(); if (deleteConfirmText.trim() === "DELETE") confirmDelete(); }}
+              disabled={isDeleting || deleteConfirmText.trim() !== "DELETE"}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {isDeleting ? "Deleting..." : "Delete"}
