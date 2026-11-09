@@ -70,7 +70,7 @@ export default function JournalEntriesPage() {
   });
   const { data: stations = [] } = useQuery({
     queryKey: ["finance-stations-mini"],
-    queryFn: async () => { const { data } = await supabase.from("finance_stations" as any).select("id,name,code").order("code"); return (data || []) as any[]; },
+    queryFn: async () => { const { data } = await supabase.from("finance_stations" as any).select("id,name,code,company_id").order("code"); return (data || []) as any[]; },
   });
   const { data: airlinesRef = [] } = useQuery({
     queryKey: ["airlines-mini"],
@@ -327,11 +327,11 @@ export default function JournalEntriesPage() {
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="text-xs text-slate-600 mb-1 block">الشركة</label>
-                    <SmartDropdown options={companyOptions} value={(lines[0]?.company_id) || ""} onChange={v => setLines(ls => ls.map(l => ({ ...l, company_id: v })))} placeholder="اختر الشركة" />
+                    <SmartDropdown options={companyOptions} value={(lines[0]?.company_id) || ""} onChange={v => setLines(ls => ls.map(l => ({ ...l, company_id: v, station_id: null })))} placeholder="اختر الشركة" />
                   </div>
-                  <div>
+                  <div className={!stations.some((s: any) => s.company_id === lines[0]?.company_id) ? "pointer-events-none opacity-50" : ""}>
                     <label className="text-xs text-slate-600 mb-1 block">المحطة</label>
-                    <SmartDropdown options={stationOptions} value={(lines[0]?.station_id) || ""} onChange={v => setLines(ls => ls.map(l => ({ ...l, station_id: v })))} placeholder="اختر المحطة" />
+                    <SmartDropdown options={stationOptions.filter(o => stations.find((s: any) => s.id === o.value)?.company_id === lines[0]?.company_id)} value={(lines[0]?.station_id) || ""} onChange={v => setLines(ls => ls.map(l => ({ ...l, station_id: v })))} placeholder="اختر المحطة" />
                   </div>
                   <div>
                     <label className="text-xs text-slate-600 mb-1 block">التاريخ</label>

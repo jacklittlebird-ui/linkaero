@@ -354,9 +354,9 @@ export default function TreasuryVouchersPage() {
   const { data: stations = [] } = useQuery({
     queryKey: ["finance_stations_min"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("finance_stations").select("id,name").order("name");
+      const { data, error } = await supabase.from("finance_stations").select("id,name,company_id").order("name");
       if (error) throw error;
-      return (data ?? []) as Named[];
+      return (data ?? []) as (Named & { company_id: string | null })[];
     },
   });
 
@@ -1042,7 +1042,7 @@ export default function TreasuryVouchersPage() {
             </div>
             <div>
               <Label>Company</Label>
-              <Select value={form.company_id} onValueChange={(v) => setForm({ ...form, company_id: v })}>
+              <Select value={form.company_id} onValueChange={(v) => setForm({ ...form, company_id: v, station_id: "" })}>
                 <SelectTrigger><SelectValue placeholder="Select company" /></SelectTrigger>
                 <SelectContent>
                   {companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
@@ -1051,10 +1051,11 @@ export default function TreasuryVouchersPage() {
             </div>
             <div>
               <Label>Station / Branch</Label>
-              <Select value={form.station_id} onValueChange={(v) => setForm({ ...form, station_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Select station" /></SelectTrigger>
+              <Select value={form.station_id} onValueChange={(v) => setForm({ ...form, station_id: v })}
+                disabled={!form.company_id || !stations.some((s: any) => s.company_id === form.company_id)}>
+                <SelectTrigger><SelectValue placeholder={form.company_id && !stations.some((s: any) => s.company_id === form.company_id) ? "لا توجد محطات لهذه الشركة" : "Select station"} /></SelectTrigger>
                 <SelectContent>
-                  {stations.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  {stations.filter((s: any) => s.company_id === form.company_id).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
