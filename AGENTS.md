@@ -1,4 +1,6 @@
 # Architecture rules
+- Treasury entry uses paginated posting-account loading and normalized Arabic/code search; this prevents API row caps and spelling variants hiding chart accounts.
+- Treasury voucher numbers are assigned atomically by a database insert trigger; CBE side rates are resolved and enforced server-side without altering historical unchanged vouchers.
 - Airline-specific Air France staff fields and print rows share a single definition in the security task-sheet module; this prevents arrival/departure labels and saved keys drifting between the form and PDF.
 - Store airline-specific operational fields in existing task_sheet_data JSON, retaining flight_schedules as the flight identity source; this avoids schema changes and preserves the frozen SSoT architecture.
 - Keep the Vercel asset proxy rewrite before the SPA fallback so uploaded report logos and print-image requests resolve to images rather than index.html on self-hosted deployments.- Treasury vouchers require their cash box/bank to be linked to a chart account (DB trigger), and custody settlement posts its own multi-line journal via settle_custody_with_lines; this keeps every treasury movement on exact ledger accounts.

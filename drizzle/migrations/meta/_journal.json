@@ -120,6 +120,13 @@
       "when": 1794225865576,
       "tag": "0016_treasury_voucher_receipt_kinds",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794226791045,
+      "tag": "0017_treasury_automatic_numbers_and_cbe_side_rates",
+      "breakpoints": true
     }
   ]
 }

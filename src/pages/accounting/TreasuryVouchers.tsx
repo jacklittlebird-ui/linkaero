@@ -45,6 +45,10 @@ import {
 } from "lucide-react";
 import { exportToExcel } from "@/lib/exportExcel";
 import { format } from "date-fns";
+import { Command, CommandInput, CommandItem, CommandList, CommandEmpty } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ChevronsUpDown, Check } from "lucide-react";
+import { filterTreasuryAccounts, selectTreasuryRate } from "@/lib/treasuryEntry";
 
 type VoucherType = "receipt" | "payment" | "pending";
 type PaymentSubtype = "general" | "pending_custody" | "advance" | "cost";
@@ -141,7 +145,6 @@ interface AccountRow { id: string; account_name: string; currency: string; }
 interface GlAccount { id: string; code: string; name: string; name_ar: string | null; }
 
 const emptyForm = (subtype: PaymentSubtype | null) => ({
-  voucher_no: "",
   payment_subtype: subtype,
   voucher_date: format(new Date(), "yyyy-MM-dd"),
   description: "",
@@ -149,7 +152,6 @@ const emptyForm = (subtype: PaymentSubtype | null) => ({
   expense_item: "",
   currency: "EGP",
   amount: 0,
-  exchange_rate: 0,
   party_type: "",
   party_name: "",
   pending_kind: "company",
@@ -200,19 +202,9 @@ function AccountPicker({
   side: "debit" | "credit";
 }) {
   const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
   const selected = accounts.find((a) => a.id === value);
-  const results = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    const list = term
-      ? accounts.filter(
-          (a) =>
-            a.code.toLowerCase().includes(term) ||
-            (a.name ?? "").toLowerCase().includes(term) ||
-            (a.name_ar ?? "").toLowerCase().includes(term),
-        )
-      : accounts;
-    return list.slice(0, 200);
-  }, [accounts, q]);
+  const results = useMemo(() => filterTreasuryAccounts(accounts, q), [accounts, q]);
 
   return (
     <div className="col-span-2">
@@ -221,37 +213,30 @@ function AccountPicker({
           ? "Debit account — البند المدين (الخزينة دائنة)"
           : "Credit account — البند الدائن (الخزينة مدينة)"}
       </Label>
-      <Input
-        className="mb-2"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        aria-label="Search account by code or name"
-      />
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger>
-          <SelectValue placeholder="Select account from the chart of accounts" />
-        </SelectTrigger>
-        <SelectContent className="max-h-72">
-          {selected && !results.some((a) => a.id === selected.id) && (
-            <SelectItem value={selected.id}>
-              {selected.code} — {selected.name_ar || selected.name}
-            </SelectItem>
-          )}
-          {results.map((a) => (
-            <SelectItem key={a.id} value={a.id}>
-              {a.code} — {a.name_ar || a.name}
-            </SelectItem>
-          ))}
-          {results.length === 0 && (
-            <div className="px-3 py-2 text-sm text-muted-foreground">No matching account</div>
-          )}
-        </SelectContent>
-      </Select>
-      <p className="mt-1 text-xs text-muted-foreground">
-        {side === "debit"
-          ? "Payment voucher: treasury is credited, the selected account is debited."
-          : "Receipt voucher: treasury is debited, the selected account is credited."}
-      </p>
+      <Popover open={open} onOpenChange={(next) => { setOpen(next); if (next) setQ(""); }} modal>
+        <PopoverTrigger asChild>
+          <Button variant="outline" role="combobox" aria-expanded={open} aria-label="Select chart account"
+            className="w-full justify-between h-auto min-h-10 text-start font-normal">
+            <span className="min-w-0 whitespace-normal">{selected ? `${selected.code} — ${selected.name_ar || selected.name}` : "اختر الحساب / Select account"}</span>
+            <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+          <Command shouldFilter={false}>
+            <Label className="block px-3 pt-2">اسم الحساب أو رقمه / Account name or code</Label>
+            <CommandInput value={q} onValueChange={setQ} aria-label="Search account by code or name" />
+            <CommandList>
+              <CommandEmpty>لا يوجد حساب مطابق / No matching account</CommandEmpty>
+              {results.map((a) => (
+                <CommandItem key={a.id} value={a.id} onSelect={() => { onChange(a.id); setOpen(false); }}>
+                  <span className="min-w-0 flex-1 whitespace-normal">{a.code} — {a.name_ar || a.name}</span>
+                  {a.id === value && <Check className="ms-2 h-4 w-4 shrink-0" />}
+                </CommandItem>
+              ))}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
@@ -273,6 +258,19 @@ export default function TreasuryVouchersPage() {
   const [settleNotes, setSettleNotes] = useState("");
   const [recoverTarget, setRecoverTarget] = useState<Voucher | null>(null);
   const [recoverAmount, setRecoverAmount] = useState<number>(0);
+
+  const { data: cbeQuote, isFetching: rateLoading, refetch: refreshRate } = useQuery({
+    queryKey: ["treasury_cbe_quote", form.currency, form.voucher_date],
+    enabled: dialogOpen && !!user && form.currency !== "EGP",
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("treasury_cbe_quote", {
+        _currency: form.currency as typeof CURRENCIES[number], _date: form.voucher_date,
+      });
+      if (error) throw error;
+      return data as { buy_rate: number; sell_rate: number; rate_date: string; source: string } | null;
+    },
+  });
+  const automaticRate = selectTreasuryRate(form.currency, form.payment_subtype === null ? "receipt" : "payment", cbeQuote ?? null);
 
   const { data: vouchers = [] } = useQuery({
     queryKey: ["treasury_vouchers"],
@@ -367,14 +365,15 @@ export default function TreasuryVouchersPage() {
   const { data: glAccounts = [] } = useQuery({
     queryKey: ["coa_min_treasury"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("chart_of_accounts")
-        .select("id,code,name,name_ar")
-        .eq("is_group", false)
-        .order("code")
-        .limit(5000);
-      if (error) throw error;
-      return (data ?? []) as GlAccount[];
+      const accounts: GlAccount[] = [];
+      for (let offset = 0; ; offset += 1000) {
+        const { data, error } = await supabase.from("chart_of_accounts")
+          .select("id,code,name,name_ar").eq("is_group", false).order("code").range(offset, offset + 999);
+        if (error) throw error;
+        accounts.push(...(data ?? []) as GlAccount[]);
+        if (!data || data.length < 1000) break;
+      }
+      return accounts;
     },
   });
 
@@ -456,7 +455,7 @@ export default function TreasuryVouchersPage() {
 
   const create = useMutation({
     mutationFn: async () => {
-      if (!form.voucher_no.trim()) throw new Error("Voucher number is required");
+      if (automaticRate === null) throw new Error("لا يوجد سعر موثق من البنك المركزي لهذه العملة والتاريخ");
       if (!form.amount || form.amount <= 0) throw new Error("Amount must be greater than zero");
       if (!form.account_id)
         throw new Error(
@@ -474,7 +473,6 @@ export default function TreasuryVouchersPage() {
 
       const isReceipt = form.payment_subtype === null;
       const payload: Record<string, unknown> = {
-        voucher_no: form.voucher_no.trim(),
         voucher_type: isReceipt ? "receipt" : form.payment_subtype === "pending_custody" ? "pending" : "payment",
         payment_subtype: form.payment_subtype,
         pending_kind: form.payment_subtype === "pending_custody" ? form.pending_kind : null,
@@ -485,8 +483,7 @@ export default function TreasuryVouchersPage() {
         reference: form.reference || null,
         currency: form.currency,
         amount: Number(form.amount),
-        // 0 lets the DB trigger resolve the CBE rate of the voucher date
-        exchange_rate: Number(form.exchange_rate) || 0,
+        exchange_rate: automaticRate,
         base_amount: 0,
         party_type: form.party_type || null,
         party_name: form.party_name || null,
@@ -507,14 +504,15 @@ export default function TreasuryVouchersPage() {
         status: "draft",
         created_by: user?.id ?? null,
       };
-      const { error } = await (supabase.from as any)("treasury_vouchers").insert(payload);
+      const { data, error } = await (supabase.from as any)("treasury_vouchers").insert(payload).select("voucher_no").single();
       if (error) throw error;
+      return data as { voucher_no: string };
     },
-    onSuccess: () => {
+    onSuccess: (saved) => {
       qc.invalidateQueries({ queryKey: ["treasury_vouchers"] });
       qc.invalidateQueries({ queryKey: ["v_treasury_balances"] });
       setDialogOpen(false);
-      toast.success("Voucher created");
+      toast.success(`تم إنشاء السند / Voucher created: ${saved.voucher_no}`);
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -1015,7 +1013,7 @@ export default function TreasuryVouchersPage() {
             )}
             <div>
               <Label>Voucher Number</Label>
-              <Input value={form.voucher_no} onChange={(e) => setForm({ ...form, voucher_no: e.target.value })} />
+              <Input aria-label="Voucher Number" value="تلقائي عند الحفظ" readOnly />
             </div>
             <div>
               <Label>Voucher Date</Label>
@@ -1242,9 +1240,17 @@ export default function TreasuryVouchersPage() {
                 onChange={(e) => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })} />
             </div>
             <div className="col-span-2">
-              <Label>Exchange rate (leave 0 to use the daily CBE rate of the voucher date)</Label>
-              <Input type="number" min="0" step="0.0001" value={form.exchange_rate}
-                onChange={(e) => setForm({ ...form, exchange_rate: parseFloat(e.target.value) || 0 })} />
+              <Label>{form.payment_subtype === null ? "سعر بيع البنك المركزي / CBE selling rate" : "سعر شراء البنك المركزي / CBE buying rate"}</Label>
+              <div className="flex gap-2">
+                <Input aria-label="CBE exchange rate" value={automaticRate ?? ""} readOnly />
+                {form.currency !== "EGP" && <Button variant="outline" size="icon" aria-label="Refresh CBE rate" title="تحديث سعر البنك المركزي"
+                  disabled={rateLoading} onClick={() => refreshRate()}><RefreshCw className="h-4 w-4" /></Button>}
+              </div>
+              {form.currency !== "EGP" && <p className={`mt-1 text-sm ${automaticRate === null ? "text-destructive" : "text-muted-foreground"}`}>
+                {rateLoading ? "جاري التحقق من السعر…" : automaticRate === null
+                  ? "لا يوجد سعر موثق متاح من البنك المركزي لهذه العملة والتاريخ."
+                  : `البنك المركزي المصري — ${cbeQuote?.rate_date ? format(new Date(`${cbeQuote.rate_date}T12:00:00`), "dd/MM/yyyy") : ""}`}
+              </p>}
             </div>
             <div className="col-span-2">
               <Label>Description</Label>
@@ -1257,7 +1263,7 @@ export default function TreasuryVouchersPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={() => create.mutate()} disabled={create.isPending}>
+            <Button onClick={() => create.mutate()} disabled={create.isPending || rateLoading || automaticRate === null}>
               {create.isPending ? "Saving..." : "Create Voucher"}
             </Button>
           </DialogFooter>

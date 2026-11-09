@@ -14410,6 +14410,13 @@ export type Database = {
         Args: { _bank: string; _cash: string }
         Returns: string
       }
+      treasury_cbe_quote: {
+        Args: {
+          _currency: Database["public"]["Enums"]["finance_currency"]
+          _date: string
+        }
+        Returns: Json
+      }
       treasury_daily_rate:
         | {
             Args: {
