@@ -47,6 +47,7 @@ import { exportToExcel } from "@/lib/exportExcel";
 import { format } from "date-fns";
 import { Command, CommandInput, CommandItem, CommandList, CommandEmpty } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import linkAeroLogo from "@/assets/linkaero-logo.png";
 import { ChevronsUpDown, Check, Pencil } from "lucide-react";
 import { filterTreasuryAccounts, selectTreasuryRate } from "@/lib/treasuryEntry";
 
@@ -661,9 +662,18 @@ export default function TreasuryVouchersPage() {
         th{background:#f3f4f6;width:34%}
         .sign{display:flex;gap:16px;margin-top:48px}
         .box{flex:1;border-top:1px solid #333;padding-top:8px;text-align:center;font-size:12px}
+        .head{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #1e3a8a;padding-bottom:12px;margin-bottom:20px}
+        .head img{height:70px;object-fit:contain}
+        .head .co{text-align:right}
+        .kind{text-align:center;font-size:18px;font-weight:bold;margin:8px 0 4px}
+        .no{text-align:center;color:#555;margin-bottom:20px}
       </style></head><body>
-      <h1>Link Aviation Services</h1>
-      <div class="sub">${kind} — ${v.voucher_no}</div>
+      <div class="head">
+        <img src="${window.location.origin}${linkAeroLogo}" alt="Link Aero" />
+        <div class="co"><h1>Link Aero Trading Agency</h1></div>
+      </div>
+      <div class="kind">${kind}</div>
+      <div class="no">${v.voucher_no}</div>
       <table>
         <tr><th>Journal No / رقم القيد</th><td>${(v as any).je?.entry_no ?? "—"}</td></tr>
         <tr><th>Date / التاريخ</th><td>${format(new Date(v.voucher_date), "dd/MM/yyyy")}</td></tr>
@@ -680,7 +690,7 @@ export default function TreasuryVouchersPage() {
         <div class="box">Reviewer<br/>المراجع</div>
         <div class="box">Approving Authority<br/>السلطة المعتمدة</div>
       </div>
-      <script>window.onload=()=>window.print()</script>
+      <script>window.onload=()=>{const i=document.images;let n=i.length;if(!n)return window.print();for(const im of i){const d=()=>{if(--n===0)window.print()};im.complete?d():(im.onload=im.onerror=d)}}</script>
       </body></html>`);
     w.document.close();
   };
