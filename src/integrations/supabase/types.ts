@@ -12136,8 +12136,11 @@ export type Database = {
           finance_approved_by: string | null
           flight_schedule_id: string | null
           id: string
+          invoice_id: string | null
           journal_entry_id: string | null
+          movement_kind: string | null
           notes: string | null
+          on_account: boolean
           parent_pending_id: string | null
           party_name: string | null
           party_type: string | null
@@ -12160,6 +12163,7 @@ export type Database = {
           status: Database["public"]["Enums"]["voucher_status"]
           supplier_id: string | null
           updated_at: string
+          vendor_invoice_id: string | null
           voucher_date: string
           voucher_no: string
           voucher_type: Database["public"]["Enums"]["voucher_type"]
@@ -12185,8 +12189,11 @@ export type Database = {
           finance_approved_by?: string | null
           flight_schedule_id?: string | null
           id?: string
+          invoice_id?: string | null
           journal_entry_id?: string | null
+          movement_kind?: string | null
           notes?: string | null
+          on_account?: boolean
           parent_pending_id?: string | null
           party_name?: string | null
           party_type?: string | null
@@ -12209,6 +12216,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["voucher_status"]
           supplier_id?: string | null
           updated_at?: string
+          vendor_invoice_id?: string | null
           voucher_date?: string
           voucher_no: string
           voucher_type: Database["public"]["Enums"]["voucher_type"]
@@ -12234,8 +12242,11 @@ export type Database = {
           finance_approved_by?: string | null
           flight_schedule_id?: string | null
           id?: string
+          invoice_id?: string | null
           journal_entry_id?: string | null
+          movement_kind?: string | null
           notes?: string | null
+          on_account?: boolean
           parent_pending_id?: string | null
           party_name?: string | null
           party_type?: string | null
@@ -12258,6 +12269,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["voucher_status"]
           supplier_id?: string | null
           updated_at?: string
+          vendor_invoice_id?: string | null
           voucher_date?: string
           voucher_no?: string
           voucher_type?: Database["public"]["Enums"]["voucher_type"]
@@ -12299,6 +12311,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "treasury_vouchers_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treasury_vouchers_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v_customer_invoices"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "treasury_vouchers_journal_entry_id_fkey"
             columns: ["journal_entry_id"]
             isOneToOne: false
@@ -12324,6 +12350,13 @@ export type Database = {
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treasury_vouchers_vendor_invoice_id_fkey"
+            columns: ["vendor_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_invoices"
             referencedColumns: ["id"]
           },
         ]
@@ -13693,8 +13726,11 @@ export type Database = {
           finance_approved_by: string | null
           flight_schedule_id: string | null
           id: string
+          invoice_id: string | null
           journal_entry_id: string | null
+          movement_kind: string | null
           notes: string | null
+          on_account: boolean
           parent_pending_id: string | null
           party_name: string | null
           party_type: string | null
@@ -13717,6 +13753,7 @@ export type Database = {
           status: Database["public"]["Enums"]["voucher_status"]
           supplier_id: string | null
           updated_at: string
+          vendor_invoice_id: string | null
           voucher_date: string
           voucher_no: string
           voucher_type: Database["public"]["Enums"]["voucher_type"]
@@ -14054,8 +14091,11 @@ export type Database = {
           finance_approved_by: string | null
           flight_schedule_id: string | null
           id: string
+          invoice_id: string | null
           journal_entry_id: string | null
+          movement_kind: string | null
           notes: string | null
+          on_account: boolean
           parent_pending_id: string | null
           party_name: string | null
           party_type: string | null
@@ -14078,6 +14118,7 @@ export type Database = {
           status: Database["public"]["Enums"]["voucher_status"]
           supplier_id: string | null
           updated_at: string
+          vendor_invoice_id: string | null
           voucher_date: string
           voucher_no: string
           voucher_type: Database["public"]["Enums"]["voucher_type"]
@@ -14236,8 +14277,11 @@ export type Database = {
           finance_approved_by: string | null
           flight_schedule_id: string | null
           id: string
+          invoice_id: string | null
           journal_entry_id: string | null
+          movement_kind: string | null
           notes: string | null
+          on_account: boolean
           parent_pending_id: string | null
           party_name: string | null
           party_type: string | null
@@ -14260,6 +14304,7 @@ export type Database = {
           status: Database["public"]["Enums"]["voucher_status"]
           supplier_id: string | null
           updated_at: string
+          vendor_invoice_id: string | null
           voucher_date: string
           voucher_no: string
           voucher_type: Database["public"]["Enums"]["voucher_type"]
@@ -14294,8 +14339,11 @@ export type Database = {
           finance_approved_by: string | null
           flight_schedule_id: string | null
           id: string
+          invoice_id: string | null
           journal_entry_id: string | null
+          movement_kind: string | null
           notes: string | null
+          on_account: boolean
           parent_pending_id: string | null
           party_name: string | null
           party_type: string | null
@@ -14318,6 +14366,7 @@ export type Database = {
           status: Database["public"]["Enums"]["voucher_status"]
           supplier_id: string | null
           updated_at: string
+          vendor_invoice_id: string | null
           voucher_date: string
           voucher_no: string
           voucher_type: Database["public"]["Enums"]["voucher_type"]

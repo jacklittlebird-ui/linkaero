@@ -18,6 +18,7 @@
 //              − outstanding custody − outstanding advances = final available.
 
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -163,7 +164,28 @@ const emptyForm = (subtype: PaymentSubtype | null) => ({
   account_id: "",
   flight_schedule_id: "",
   notes: "",
+  movement_kind: subtype === null ? "customer" : subtype === "general" ? "supplier" : "",
+  invoice_id: "",
+  vendor_invoice_id: "",
+  on_account: false,
 });
+
+// Cash in Transit — the intermediate account for cheques cashed from the bank
+// and later deposited into a cash box (avoids double-counting).
+export const CASH_IN_TRANSIT_CODE = "120130001";
+
+const RECEIPT_KINDS = [
+  { value: "customer", label: "تحصيل من عميل / Customer collection" },
+  { value: "financing", label: "تمويل من الجاري / Current-account financing" },
+  { value: "cash_in_transit", label: "توريد نقدية بالطريق (شيك مصروف من البنك) / Cash in transit deposit" },
+  { value: "other", label: "إيرادات / مقبوضات أخرى / Other" },
+];
+const PAYMENT_KINDS = [
+  { value: "supplier", label: "سداد لمورد / Supplier payment" },
+  { value: "expense", label: "مصروف عام / General expense" },
+  { value: "cash_in_transit", label: "صرف شيك لتمويل الخزينة (نقدية بالطريق) / Cheque to cash in transit" },
+  { value: "other", label: "أخرى / Other" },
+];
 
 const num = (n: unknown) =>
   Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -237,7 +259,10 @@ function AccountPicker({
 export default function TreasuryVouchersPage() {
   const qc = useQueryClient();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabKey>("receipt");
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<TabKey>(
+    (searchParams.get("tab") as TabKey) || "receipt",
+  );
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(emptyForm(null));
   const [statusFilter, setStatusFilter] = useState<"all" | VoucherStatus>("all");
@@ -373,6 +398,34 @@ export default function TreasuryVouchersPage() {
     },
   });
 
+  const { data: openInvoices = [] } = useQuery({
+    queryKey: ["tv_open_invoices"],
+    queryFn: async () => {
+      const { data } = await supabase.from("invoices")
+        .select("id,invoice_no,operator,total,currency,status")
+        .not("status", "in", "(Paid,Cancelled)").order("date", { ascending: false }).limit(500);
+      return (data ?? []) as any[];
+    },
+  });
+  const { data: openVendorInvoices = [] } = useQuery({
+    queryKey: ["tv_open_vendor_invoices"],
+    queryFn: async () => {
+      const { data } = await supabase.from("vendor_invoices")
+        .select("id,invoice_no,vendor_name,total,currency,status")
+        .not("status", "in", "(Paid,Cancelled)").order("date", { ascending: false }).limit(500);
+      return (data ?? []) as any[];
+    },
+  });
+
+  const setKind = (kind: string) => {
+    const transit = glAccounts.find((a) => a.code === CASH_IN_TRANSIT_CODE);
+    setForm((f) => ({
+      ...f, movement_kind: kind, invoice_id: "", vendor_invoice_id: "", on_account: false,
+      account_id: kind === "cash_in_transit" && transit ? transit.id : f.account_id,
+      party_type: kind === "customer" ? "Customer" : kind === "supplier" ? "Supplier" : f.party_type,
+    }));
+  };
+
   const matchesTab = (v: Voucher, tab: TabKey) =>
     tab === "receipt" ? v.voucher_type === "receipt" : v.payment_subtype === tab;
 
@@ -412,6 +465,13 @@ export default function TreasuryVouchersPage() {
             : "Select the debit account from the chart of accounts",
         );
 
+      if (form.movement_kind === "customer" && !form.party_name.trim())
+        throw new Error("اكتب اسم العميل / Customer name is required");
+      if (form.movement_kind === "customer" && !form.on_account && !form.invoice_id)
+        throw new Error("اختر الفاتورة المحصلة أو حدد دفعة تحت الحساب");
+      if (form.movement_kind === "supplier" && !form.on_account && !form.vendor_invoice_id)
+        throw new Error("اختر فاتورة المورد أو حدد دفعة تحت الحساب");
+
       const isReceipt = form.payment_subtype === null;
       const payload: Record<string, unknown> = {
         voucher_no: form.voucher_no.trim(),
@@ -440,6 +500,10 @@ export default function TreasuryVouchersPage() {
         account_id: form.account_id || null,
         flight_schedule_id: form.flight_schedule_id || null,
         notes: form.notes || null,
+        movement_kind: form.movement_kind || null,
+        invoice_id: !form.on_account && form.movement_kind === "customer" ? form.invoice_id || null : null,
+        vendor_invoice_id: !form.on_account && form.movement_kind === "supplier" ? form.vendor_invoice_id || null : null,
+        on_account: form.on_account,
         status: "draft",
         created_by: user?.id ?? null,
       };
@@ -1047,6 +1111,80 @@ export default function TreasuryVouchersPage() {
                     onChange={(e) => setForm({ ...form, flight_schedule_id: e.target.value })} />
                 </div>
               </>
+            )}
+
+            {(form.payment_subtype === null || isGeneral) && (
+              <div className="col-span-2">
+                <Label>{form.payment_subtype === null ? "نوع المقبوضات / Receipt kind" : "نوع المدفوعات / Payment kind"}</Label>
+                <Select value={form.movement_kind} onValueChange={setKind}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {(form.payment_subtype === null ? RECEIPT_KINDS : PAYMENT_KINDS).map((k) => (
+                      <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form.movement_kind === "cash_in_transit" && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {form.payment_subtype === null
+                      ? "القيد: من حـ/ الخزينة إلى حـ/ نقدية بالطريق — يُقفل الحساب الوسيط عند التوريد."
+                      : "القيد: من حـ/ نقدية بالطريق إلى حـ/ البنك — اختر البنك المسحوب عليه الشيك."}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {(form.movement_kind === "customer" || form.movement_kind === "supplier") && (form.payment_subtype === null || isGeneral) && (
+              <div className="col-span-2 rounded border p-3 space-y-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={form.on_account}
+                    onChange={(e) => setForm({ ...form, on_account: e.target.checked, invoice_id: "", vendor_invoice_id: "" })} />
+                  دفعة تحت الحساب / Payment on account (بدون ربط بفاتورة)
+                </label>
+                {!form.on_account && form.movement_kind === "customer" && (
+                  <div>
+                    <Label>الفاتورة المحصلة / Invoice collected</Label>
+                    <Select value={form.invoice_id} onValueChange={(v) => {
+                      const inv = openInvoices.find((i) => i.id === v);
+                      setForm({ ...form, invoice_id: v, party_name: form.party_name || inv?.operator || "",
+                        reference: inv?.invoice_no ?? form.reference });
+                    }}>
+                      <SelectTrigger><SelectValue placeholder="Select invoice" /></SelectTrigger>
+                      <SelectContent className="max-h-72">
+                        {openInvoices.map((i) => (
+                          <SelectItem key={i.id} value={i.id}>
+                            {i.invoice_no} • {i.operator} • {i.currency} {num(i.total)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {!form.on_account && form.movement_kind === "supplier" && (
+                  <div>
+                    <Label>فاتورة المورد / Vendor invoice</Label>
+                    <Select value={form.vendor_invoice_id} onValueChange={(v) => {
+                      const inv = openVendorInvoices.find((i) => i.id === v);
+                      setForm({ ...form, vendor_invoice_id: v, party_name: form.party_name || inv?.vendor_name || "",
+                        reference: inv?.invoice_no ?? form.reference });
+                    }}>
+                      <SelectTrigger><SelectValue placeholder="Select vendor invoice" /></SelectTrigger>
+                      <SelectContent className="max-h-72">
+                        {openVendorInvoices.map((i) => (
+                          <SelectItem key={i.id} value={i.id}>
+                            {i.invoice_no} • {i.vendor_name} • {i.currency} {num(i.total)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  {form.movement_kind === "customer"
+                    ? "الحساب الدائن = حساب العميل في شجرة الحسابات (اختره بالأسفل)."
+                    : "الحساب المدين = حساب المورد في شجرة الحسابات (اختره بالأسفل)."}
+                </p>
+              </div>
             )}
 
             <AccountPicker

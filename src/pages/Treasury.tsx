@@ -22,8 +22,8 @@ import {
 const links = [
   { to: "/treasury/bank-accounts", label: "Bank Accounts", desc: "Manage bank accounts, IBAN, balances", icon: Landmark, color: "text-blue-600" },
   { to: "/treasury/cash-accounts", label: "Cash Accounts", desc: "Petty cash & cash on hand", icon: Wallet, color: "text-emerald-600" },
-  { to: "/treasury/receipts", label: "Receipts", desc: "Customer collections & receipts", icon: ArrowDownToLine, color: "text-green-600" },
-  { to: "/treasury/payments", label: "Payments", desc: "Vendor & supplier payments", icon: ArrowUpFromLine, color: "text-rose-600" },
+  { to: "/accounting/treasury-vouchers?tab=receipt", label: "Receipt Vouchers", desc: "Collections, financing & cash-in-transit deposits", icon: ArrowDownToLine, color: "text-green-600" },
+  { to: "/accounting/treasury-vouchers?tab=general", label: "Payment Vouchers", desc: "Supplier, expense & cheque payments", icon: ArrowUpFromLine, color: "text-rose-600" },
   { to: "/treasury/bank-transfers", label: "Bank Transfers", desc: "Inter-account transfers", icon: ArrowLeftRight, color: "text-violet-600" },
   { to: "/treasury/bank-reconciliation", label: "Bank Reconciliation", desc: "Reconcile statements vs system", icon: ClipboardCheck, color: "text-amber-600" },
 ];

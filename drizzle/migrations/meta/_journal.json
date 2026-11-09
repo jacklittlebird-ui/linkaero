@@ -113,6 +113,13 @@
       "when": 1794224592439,
       "tag": "0015_custody_settlement_lines_and_gl_links",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1794225865576,
+      "tag": "0016_treasury_voucher_receipt_kinds",
+      "breakpoints": true
     }
   ]
 }
