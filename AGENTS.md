@@ -1,4 +1,5 @@
 # Architecture rules
+- Cash-box options are configured records linked to exact posting accounts in the chart, never chart IDs passed as cash-box IDs; this preserves voucher foreign keys and ledger linkage.
 - Treasury entry uses paginated posting-account loading and normalized Arabic/code search; this prevents API row caps and spelling variants hiding chart accounts.
 - Treasury voucher numbers are assigned atomically by a database insert trigger; CBE side rates are resolved and enforced server-side without altering historical unchanged vouchers.
 - Airline-specific Air France staff fields and print rows share a single definition in the security task-sheet module; this prevents arrival/departure labels and saved keys drifting between the form and PDF.

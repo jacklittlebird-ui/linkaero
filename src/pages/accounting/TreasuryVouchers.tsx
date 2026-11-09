@@ -387,7 +387,7 @@ export default function TreasuryVouchersPage() {
     },
   });
 
-  const { data: cash = [] } = useQuery({
+  const { data: cash = [], isLoading: cashLoading, isError: cashLoadError } = useQuery({
     queryKey: ["cash_accounts_min"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -456,6 +456,7 @@ export default function TreasuryVouchersPage() {
   const create = useMutation({
     mutationFn: async () => {
       if (automaticRate === null) throw new Error("لا يوجد سعر موثق من البنك المركزي لهذه العملة والتاريخ");
+      if (!form.cash_account_id && !form.bank_account_id) throw new Error("اختر الخزينة أو الحساب البنكي");
       if (!form.amount || form.amount <= 0) throw new Error("Amount must be greater than zero");
       if (!form.account_id)
         throw new Error(
@@ -1218,12 +1219,16 @@ export default function TreasuryVouchersPage() {
             <div>
               <Label>Treasury / Cash box</Label>
               <Select value={form.cash_account_id}
+                disabled={cashLoading || cashLoadError || cash.length === 0}
                 onValueChange={(v) => setForm({ ...form, cash_account_id: v, bank_account_id: "" })}>
                 <SelectTrigger><SelectValue placeholder="Select cash box" /></SelectTrigger>
                 <SelectContent>
                   {cash.map((c) => <SelectItem key={c.id} value={c.id}>{c.account_name} ({c.currency})</SelectItem>)}
                 </SelectContent>
               </Select>
+              {(cashLoading || cashLoadError || cash.length === 0) && <p className="mt-1 text-sm text-muted-foreground">
+                {cashLoading ? "جاري تحميل الخزائن…" : cashLoadError ? "تعذر تحميل الخزائن" : "لا توجد خزائن مسجلة"}
+              </p>}
             </div>
             <div>
               <Label>Currency</Label>
