@@ -1255,6 +1255,7 @@ export type Database = {
           created_at: string
           currency: string
           current_balance: number
+          gl_account_id: string | null
           iban: string | null
           id: string
           notes: string | null
@@ -1272,6 +1273,7 @@ export type Database = {
           created_at?: string
           currency?: string
           current_balance?: number
+          gl_account_id?: string | null
           iban?: string | null
           id?: string
           notes?: string | null
@@ -1289,6 +1291,7 @@ export type Database = {
           created_at?: string
           currency?: string
           current_balance?: number
+          gl_account_id?: string | null
           iban?: string | null
           id?: string
           notes?: string | null
@@ -1303,6 +1306,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_accounts_gl_account_id_fkey"
+            columns: ["gl_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -2015,6 +2025,7 @@ export type Database = {
           current_balance: number
           custodian: string | null
           custody_type: string
+          gl_account_id: string | null
           id: string
           location: string | null
           notes: string | null
@@ -2032,6 +2043,7 @@ export type Database = {
           current_balance?: number
           custodian?: string | null
           custody_type?: string
+          gl_account_id?: string | null
           id?: string
           location?: string | null
           notes?: string | null
@@ -2049,6 +2061,7 @@ export type Database = {
           current_balance?: number
           custodian?: string | null
           custody_type?: string
+          gl_account_id?: string | null
           id?: string
           location?: string | null
           notes?: string | null
@@ -2064,6 +2077,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_accounts_gl_account_id_fkey"
+            columns: ["gl_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
             referencedColumns: ["id"]
           },
           {
@@ -4874,6 +4894,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      document_sequences: {
+        Row: {
+          last_no: number
+          scope: string
+          seq_year: number
+        }
+        Insert: {
+          last_no?: number
+          scope: string
+          seq_year: number
+        }
+        Update: {
+          last_no?: number
+          scope?: string
+          seq_year?: number
+        }
+        Relationships: []
       }
       document_signatures: {
         Row: {
@@ -9232,7 +9270,7 @@ export type Database = {
           method?: string
           notes?: string | null
           receipt_date?: string
-          receipt_no: string
+          receipt_no?: string
           reconciled_at?: string | null
           reconciliation_id?: string | null
           reference?: string | null
@@ -13901,6 +13939,10 @@ export type Database = {
       mark_commission_payout_paid: {
         Args: { _paid_date?: string; _payout_id: string }
         Returns: undefined
+      }
+      next_document_number: {
+        Args: { _date: string; _scope: string }
+        Returns: string
       }
       notify_finance_users: {
         Args: {

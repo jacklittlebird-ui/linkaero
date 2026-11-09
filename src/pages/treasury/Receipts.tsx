@@ -22,12 +22,11 @@ const loadOpenInvoices = async () => {
 export default function ReceiptsPage() {
   return <TreasuryTablePage
     title="Receipts"
-    description="Customer collections & receipts. Posting a receipt against an invoice automatically marks it Paid."
+    description="Customer collections & receipts. Receipt numbers are assigned automatically per type (e.g. CSH-0001-2026). Posting a receipt against an invoice automatically marks it Paid."
     table="receipts"
     orderBy="receipt_date"
     searchKeys={["receipt_no","customer_name","reference"]}
     fields={[
-      { key: "receipt_no", label: "Receipt No.", type: "text", required: true },
       { key: "receipt_date", label: "Date", type: "date" },
       { key: "customer_name", label: "Customer / Payer", type: "text", required: true },
       { key: "invoice_id", label: "Applied to Invoice", type: "select", loadOptions: loadOpenInvoices, allowEmpty: true, span: 2 },

@@ -253,7 +253,7 @@ export default function TreasuryVouchersPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("treasury_vouchers")
-        .select("*")
+        .select("*, je:journal_entries!treasury_vouchers_journal_entry_id_fkey(entry_no)")
         .order("voucher_date", { ascending: false })
         .order("created_at", { ascending: false })
         .order("id", { ascending: false });
@@ -567,6 +567,7 @@ export default function TreasuryVouchersPage() {
       <h1>Link Aviation Services</h1>
       <div class="sub">${kind} — ${v.voucher_no}</div>
       <table>
+        <tr><th>Journal No / رقم القيد</th><td>${(v as any).je?.entry_no ?? "—"}</td></tr>
         <tr><th>Date / التاريخ</th><td>${format(new Date(v.voucher_date), "dd/MM/yyyy")}</td></tr>
         <tr><th>Party / الطرف</th><td>${v.party_name ?? "—"}</td></tr>
         <tr><th>Amount / المبلغ</th><td>${num(v.amount)} ${v.currency}</td></tr>
@@ -708,6 +709,7 @@ export default function TreasuryVouchersPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Voucher No</TableHead>
+                      <TableHead>Journal No / رقم القيد</TableHead>
                       <TableHead>Date</TableHead>
                       {t.key === "pending_custody" && <TableHead>Custody Kind</TableHead>}
                       <TableHead>Party</TableHead>
@@ -732,6 +734,7 @@ export default function TreasuryVouchersPage() {
                       filtered.map((v) => (
                         <TableRow key={v.id}>
                           <TableCell className="font-medium">{v.voucher_no}</TableCell>
+                          <TableCell className="font-mono text-xs">{(v as any).je?.entry_no ?? "—"}</TableCell>
                           <TableCell>{format(new Date(v.voucher_date), "dd/MM/yyyy")}</TableCell>
                           {t.key === "pending_custody" && (
                             <TableCell>
