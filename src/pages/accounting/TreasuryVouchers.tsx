@@ -249,6 +249,7 @@ export default function TreasuryVouchersPage() {
     (searchParams.get("tab") as TabKey) || "receipt",
   );
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [numberRequest, setNumberRequest] = useState(0);
   const [form, setForm] = useState(emptyForm(null));
   const [statusFilter, setStatusFilter] = useState<"all" | VoucherStatus>("all");
   const [revalDate, setRevalDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
@@ -258,6 +259,21 @@ export default function TreasuryVouchersPage() {
   const [settleNotes, setSettleNotes] = useState("");
   const [recoverTarget, setRecoverTarget] = useState<Voucher | null>(null);
   const [recoverAmount, setRecoverAmount] = useState<number>(0);
+
+  const { data: voucherNumber, isFetching: numberLoading, isError: numberError } = useQuery({
+    queryKey: ["treasury_number_reservation", numberRequest, form.payment_subtype, form.voucher_date],
+    enabled: dialogOpen && !!user,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    retry: false,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("reserve_treasury_voucher_number", {
+        _subtype: form.payment_subtype, _date: form.voucher_date,
+      });
+      if (error) throw error;
+      return data as { id: string; voucher_no: string };
+    },
+  });
 
   const { data: cbeQuote, isFetching: rateLoading, refetch: refreshRate } = useQuery({
     queryKey: ["treasury_cbe_quote", form.currency, form.voucher_date],
@@ -455,6 +471,7 @@ export default function TreasuryVouchersPage() {
 
   const create = useMutation({
     mutationFn: async () => {
+      if (!voucherNumber || numberLoading) throw new Error("انتظر إصدار رقم السند");
       if (automaticRate === null) throw new Error("لا يوجد سعر موثق من البنك المركزي لهذه العملة والتاريخ");
       if (!form.cash_account_id && !form.bank_account_id) throw new Error("اختر الخزينة أو الحساب البنكي");
       if (!form.amount || form.amount <= 0) throw new Error("Amount must be greater than zero");
@@ -474,6 +491,7 @@ export default function TreasuryVouchersPage() {
 
       const isReceipt = form.payment_subtype === null;
       const payload: Record<string, unknown> = {
+        number_reservation_id: voucherNumber.id,
         voucher_type: isReceipt ? "receipt" : form.payment_subtype === "pending_custody" ? "pending" : "payment",
         payment_subtype: form.payment_subtype,
         pending_kind: form.payment_subtype === "pending_custody" ? form.pending_kind : null,
@@ -659,6 +677,7 @@ export default function TreasuryVouchersPage() {
       tab === "receipt" || tab === "balances" || tab === "fx" ? null : (tab as PaymentSubtype);
     setActiveTab(tab === "balances" || tab === "fx" ? "receipt" : tab);
     setForm(emptyForm(subtype));
+    setNumberRequest((request) => request + 1);
     setDialogOpen(true);
   };
 
@@ -1014,7 +1033,8 @@ export default function TreasuryVouchersPage() {
             )}
             <div>
               <Label>Voucher Number</Label>
-              <Input aria-label="Voucher Number" value="تلقائي عند الحفظ" readOnly />
+              <Input aria-label="Voucher Number" value={numberLoading ? "جاري إصدار الرقم…" : voucherNumber?.voucher_no ?? ""} readOnly />
+              {numberError && <p className="mt-1 text-sm text-destructive">تعذر إصدار رقم السند؛ أعد فتح النموذج.</p>}
             </div>
             <div>
               <Label>Voucher Date</Label>
@@ -1268,7 +1288,7 @@ export default function TreasuryVouchersPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={() => create.mutate()} disabled={create.isPending || rateLoading || automaticRate === null}>
+            <Button onClick={() => create.mutate()} disabled={create.isPending || numberLoading || !voucherNumber || rateLoading || automaticRate === null}>
               {create.isPending ? "Saving..." : "Create Voucher"}
             </Button>
           </DialogFooter>

@@ -127,6 +127,13 @@
       "when": 1794226791045,
       "tag": "0017_treasury_automatic_numbers_and_cbe_side_rates",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794227542967,
+      "tag": "0018_reserve_treasury_number_before_save",
+      "breakpoints": true
     }
   ]
 }

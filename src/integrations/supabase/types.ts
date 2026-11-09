@@ -12114,6 +12114,36 @@ export type Database = {
         }
         Relationships: []
       }
+      treasury_number_reservations: {
+        Row: {
+          created_at: string
+          id: string
+          prefix: string
+          used_at: string | null
+          user_id: string
+          voucher_date: string
+          voucher_no: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          prefix: string
+          used_at?: string | null
+          user_id: string
+          voucher_date: string
+          voucher_no: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          prefix?: string
+          used_at?: string | null
+          user_id?: string
+          voucher_date?: string
+          voucher_no?: string
+        }
+        Relationships: []
+      }
       treasury_vouchers: {
         Row: {
           account_id: string | null
@@ -12140,6 +12170,7 @@ export type Database = {
           journal_entry_id: string | null
           movement_kind: string | null
           notes: string | null
+          number_reservation_id: string | null
           on_account: boolean
           parent_pending_id: string | null
           party_name: string | null
@@ -12193,6 +12224,7 @@ export type Database = {
           journal_entry_id?: string | null
           movement_kind?: string | null
           notes?: string | null
+          number_reservation_id?: string | null
           on_account?: boolean
           parent_pending_id?: string | null
           party_name?: string | null
@@ -12246,6 +12278,7 @@ export type Database = {
           journal_entry_id?: string | null
           movement_kind?: string | null
           notes?: string | null
+          number_reservation_id?: string | null
           on_account?: boolean
           parent_pending_id?: string | null
           party_name?: string | null
@@ -12329,6 +12362,13 @@ export type Database = {
             columns: ["journal_entry_id"]
             isOneToOne: false
             referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treasury_vouchers_number_reservation_id_fkey"
+            columns: ["number_reservation_id"]
+            isOneToOne: false
+            referencedRelation: "treasury_number_reservations"
             referencedColumns: ["id"]
           },
           {
@@ -13730,6 +13770,7 @@ export type Database = {
           journal_entry_id: string | null
           movement_kind: string | null
           notes: string | null
+          number_reservation_id: string | null
           on_account: boolean
           parent_pending_id: string | null
           party_name: string | null
@@ -14095,6 +14136,7 @@ export type Database = {
           journal_entry_id: string | null
           movement_kind: string | null
           notes: string | null
+          number_reservation_id: string | null
           on_account: boolean
           parent_pending_id: string | null
           party_name: string | null
@@ -14160,6 +14202,10 @@ export type Database = {
       reject_expense_step: {
         Args: { _comments?: string; _step_id: string }
         Returns: string
+      }
+      reserve_treasury_voucher_number: {
+        Args: { _date: string; _subtype: string }
+        Returns: Json
       }
       resolve_purchase_approver: {
         Args: {
@@ -14281,6 +14327,7 @@ export type Database = {
           journal_entry_id: string | null
           movement_kind: string | null
           notes: string | null
+          number_reservation_id: string | null
           on_account: boolean
           parent_pending_id: string | null
           party_name: string | null
@@ -14343,6 +14390,7 @@ export type Database = {
           journal_entry_id: string | null
           movement_kind: string | null
           notes: string | null
+          number_reservation_id: string | null
           on_account: boolean
           parent_pending_id: string | null
           party_name: string | null
