@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import TreasuryDailyBoard from "@/components/treasury/TreasuryDailyBoard";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
   PieChart, Pie, Cell, Legend, BarChart, Bar,
@@ -192,6 +193,8 @@ export default function TreasuryPage() {
       </div>
 
       <div className="text-xs text-muted-foreground -mt-4">Showing data for: <span className="font-medium text-foreground">{periodSuffix}</span> ({dayCount} days)</div>
+
+      <TreasuryDailyBoard />
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
