@@ -14213,6 +14213,64 @@ export type Database = {
           end_date: string
         }[]
       }
+      settle_custody_with_lines: {
+        Args: { _lines: Json; _notes?: string; _voucher_id: string }
+        Returns: {
+          account_id: string | null
+          airline_id: string | null
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          bank_account_id: string | null
+          base_amount: number
+          base_currency: Database["public"]["Enums"]["finance_currency"] | null
+          cash_account_id: string | null
+          company_id: string | null
+          created_at: string
+          created_by: string | null
+          currency: Database["public"]["Enums"]["finance_currency"]
+          description: string
+          exchange_rate: number
+          expense_item: string | null
+          finance_approved_at: string | null
+          finance_approved_by: string | null
+          flight_schedule_id: string | null
+          id: string
+          journal_entry_id: string | null
+          notes: string | null
+          parent_pending_id: string | null
+          party_name: string | null
+          party_type: string | null
+          payment_subtype: string | null
+          pending_kind: string | null
+          posted_at: string | null
+          posted_by: string | null
+          print_unlocked: boolean
+          recovered_amount: number
+          reference: string | null
+          repayment_plan: string | null
+          requires_approval: boolean
+          returned_amount: number
+          service_type: string | null
+          settled_amount: number | null
+          settled_at: string | null
+          settled_by: string | null
+          settlement_voucher_id: string | null
+          station_id: string | null
+          status: Database["public"]["Enums"]["voucher_status"]
+          supplier_id: string | null
+          updated_at: string
+          voucher_date: string
+          voucher_no: string
+          voucher_type: Database["public"]["Enums"]["voucher_type"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "treasury_vouchers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       settle_pending_custody: {
         Args: { _actual_amount: number; _notes?: string; _voucher_id: string }
         Returns: {
@@ -14298,6 +14356,10 @@ export type Database = {
           po_total: number
           received_total: number
         }[]
+      }
+      treasury_cash_gl: {
+        Args: { _bank: string; _cash: string }
+        Returns: string
       }
       treasury_daily_rate:
         | {

@@ -243,7 +243,8 @@ export default function TreasuryVouchersPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | VoucherStatus>("all");
   const [revalDate, setRevalDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
   const [settleTarget, setSettleTarget] = useState<Voucher | null>(null);
-  const [settleAmount, setSettleAmount] = useState<number>(0);
+  const [settleLines, setSettleLines] = useState<{ account_id: string; amount: number; description: string }[]>([]);
+  const settleSpent = settleLines.reduce((t, l) => t + Number(l.amount || 0), 0);
   const [settleNotes, setSettleNotes] = useState("");
   const [recoverTarget, setRecoverTarget] = useState<Voucher | null>(null);
   const [recoverAmount, setRecoverAmount] = useState<number>(0);
@@ -484,9 +485,12 @@ export default function TreasuryVouchersPage() {
   const settle = useMutation({
     mutationFn: async () => {
       if (!settleTarget) return;
-      const { error } = await (supabase.rpc as any)("settle_pending_custody", {
+      const lines = settleLines.filter((l) => Number(l.amount) > 0);
+      if (lines.some((l) => !l.account_id)) throw new Error("اختر حساب المصروف لكل بند");
+      if (settleSpent > Number(settleTarget.amount)) throw new Error("المنصرف أكبر من قيمة العهدة");
+      const { error } = await (supabase.rpc as any)("settle_custody_with_lines", {
         _voucher_id: settleTarget.id,
-        _actual_amount: Number(settleAmount),
+        _lines: lines.map((l) => ({ account_id: l.account_id, amount: Number(l.amount), description: l.description })),
         _notes: settleNotes || null,
       });
       if (error) throw error;
@@ -496,7 +500,7 @@ export default function TreasuryVouchersPage() {
       qc.invalidateQueries({ queryKey: ["v_treasury_balances"] });
       setSettleTarget(null);
       setSettleNotes("");
-      toast.success("Custody settled — difference returned to the treasury");
+      toast.success("تمت التسوية — رُحّل القيد وعاد الفرق إلى رصيد الخزينة");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -768,7 +772,7 @@ export default function TreasuryVouchersPage() {
                             )}
                             {v.payment_subtype === "pending_custody" && v.status !== "settled" && v.status !== "void" && (
                               <Button size="sm" variant="secondary"
-                                onClick={() => { setSettleTarget(v); setSettleAmount(Number(v.amount)); }}>
+                                onClick={() => { setSettleTarget(v); setSettleLines([{ account_id: "", amount: Number(v.amount), description: "" }]); }}>
                                 <CheckCircle2 className="h-3 w-3" /><span className="ml-1">Settle</span>
                               </Button>
                             )}
@@ -1124,34 +1128,52 @@ export default function TreasuryVouchersPage() {
 
       {/* Settle custody */}
       <Dialog open={!!settleTarget} onOpenChange={(o) => !o && setSettleTarget(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Settle custody {settleTarget?.voucher_no}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Custody amount: {num(settleTarget?.amount)} {settleTarget?.currency}. The difference between the
-              custody amount and the actual amount spent is returned to the treasury automatically, and the
-              accounting entry is created only now.
+              قيمة العهدة: {num(settleTarget?.amount)} {settleTarget?.currency}. سجّل المنصرف الفعلي على بنوده؛
+              يُرحّل القيد تلقائياً (البنود مدينة، العهدة دائنة) ويعود الفرق إلى رصيد الخزينة.
             </p>
+            {settleLines.map((l, i) => (
+              <div key={i} className="grid grid-cols-2 gap-2 rounded border p-2">
+                <AccountPicker accounts={glAccounts} value={l.account_id} side="debit"
+                  onChange={(id) => setSettleLines((ls) => ls.map((x, j) => j === i ? { ...x, account_id: id } : x))} />
+                <div>
+                  <Label>المبلغ المنصرف</Label>
+                  <Input type="number" min="0" step="0.01" value={l.amount}
+                    onChange={(e) => setSettleLines((ls) => ls.map((x, j) => j === i ? { ...x, amount: parseFloat(e.target.value) || 0 } : x))} />
+                </div>
+                <div>
+                  <Label>البيان</Label>
+                  <Input value={l.description}
+                    onChange={(e) => setSettleLines((ls) => ls.map((x, j) => j === i ? { ...x, description: e.target.value } : x))} />
+                </div>
+                {settleLines.length > 1 && (
+                  <Button variant="ghost" size="sm" className="col-span-2 text-destructive"
+                    onClick={() => setSettleLines((ls) => ls.filter((_, j) => j !== i))}>حذف البند</Button>
+                )}
+              </div>
+            ))}
+            <Button variant="outline" size="sm"
+              onClick={() => setSettleLines((ls) => [...ls, { account_id: "", amount: 0, description: "" }])}>
+              <Plus className="h-3 w-3" /><span className="ml-1">إضافة بند مصروف</span>
+            </Button>
             <div>
-              <Label>Actual amount spent</Label>
-              <Input type="number" min="0" step="0.01" value={settleAmount}
-                onChange={(e) => setSettleAmount(parseFloat(e.target.value) || 0)} />
+              <Label>ملاحظات التسوية</Label>
+              <Textarea rows={2} value={settleNotes} onChange={(e) => setSettleNotes(e.target.value)} />
             </div>
-            <div>
-              <Label>Settlement notes</Label>
-              <Textarea rows={3} value={settleNotes} onChange={(e) => setSettleNotes(e.target.value)} />
-            </div>
-            <div className="text-sm">
-              Returned to treasury:{" "}
-              <span className="font-semibold">
-                {num(Math.max(Number(settleTarget?.amount || 0) - Number(settleAmount || 0), 0))} {settleTarget?.currency}
-              </span>
+            <div className="text-sm space-y-1">
+              <div>إجمالي المنصرف: <span className="font-semibold">{num(settleSpent)}</span></div>
+              <div>يعود إلى الخزينة:{" "}
+                <span className="font-semibold">{num(Math.max(Number(settleTarget?.amount || 0) - settleSpent, 0))} {settleTarget?.currency}</span>
+              </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSettleTarget(null)}>Cancel</Button>
             <Button onClick={() => settle.mutate()} disabled={settle.isPending}>
-              {settle.isPending ? "Settling..." : "Settle custody"}
+              {settle.isPending ? "جارٍ التسوية..." : "تسوية وترحيل القيد"}
             </Button>
           </DialogFooter>
         </DialogContent>

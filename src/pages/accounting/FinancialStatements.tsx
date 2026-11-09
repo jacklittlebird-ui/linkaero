@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileBarChart, Download } from "lucide-react";
+import { INCOME_SECTIONS, classifyIncomeAccount, incomeTotals, type IncomeSection } from "@/lib/incomeStatement";
 
 type Account = {
   id: string;
@@ -102,6 +103,22 @@ export default function FinancialStatementsPage() {
     };
     const netIncome = totals.revenue - totals.expenses;
     return { g, totals, netIncome };
+  }, [trialBalance]);
+
+  const income = useMemo(() => {
+    const rows: Record<IncomeSection, { id: string; code: string; name: string; amount: number }[]> = {
+      revenue: [], direct: [], station: [], admin: [], other: [],
+    };
+    const sums: Record<IncomeSection, number> = { revenue: 0, direct: 0, station: 0, admin: 0, other: 0 };
+    for (const r of trialBalance) {
+      const sec = classifyIncomeAccount(r.code, r.account_type, r.name);
+      if (!sec || Math.abs(r.balance) <= 0.01) continue;
+      // revenue & other items shown as credit-positive; cost sections debit-positive
+      const amount = sec === "revenue" || sec === "other" ? -r.balance : r.balance;
+      rows[sec].push({ id: r.id, code: r.code, name: r.name, amount });
+      sums[sec] += amount;
+    }
+    return { rows, sums, totals: incomeTotals(sums) };
   }, [trialBalance]);
 
   const tbTotals = trialBalance.reduce(
@@ -226,29 +243,42 @@ export default function FinancialStatementsPage() {
           <Card>
             <CardHeader><CardTitle>Income Statement — {from} to {to}</CardTitle></CardHeader>
             <CardContent className="space-y-6">
-              {(["revenue", "expense"] as const).map((t) => (
-                <div key={t}>
-                  <h3 className="font-semibold capitalize mb-2">{t === "revenue" ? "Revenue" : "Expenses"}</h3>
-                  <Table>
-                    <TableBody>
-                      {grouped.g[t].filter(r => Math.abs(r.balance) > 0.01).map((r) => (
-                        <TableRow key={r.id}>
-                          <TableCell className="font-mono w-24">{r.code}</TableCell>
-                          <TableCell>{r.name}</TableCell>
-                          <TableCell className="text-right w-40">{fmt(t === "revenue" ? -r.balance : r.balance)}</TableCell>
+              {INCOME_SECTIONS.map((sec) => {
+                const subtotal =
+                  sec.key === "direct" ? { label: "صافي الإيرادات — Net Revenue", value: income.totals.netRevenue }
+                  : sec.key === "station" ? { label: "مجمل الربح — Gross Profit", value: income.totals.grossProfit }
+                  : sec.key === "admin" ? { label: "ربح النشاط — Operating Profit", value: income.totals.operatingProfit }
+                  : null;
+                return (
+                  <div key={sec.key}>
+                    <h3 className="font-semibold mb-2">{sec.ar} — {sec.en}</h3>
+                    <Table>
+                      <TableBody>
+                        {income.rows[sec.key].map((r) => (
+                          <TableRow key={r.id}>
+                            <TableCell className="font-mono w-24">{r.code}</TableCell>
+                            <TableCell>{r.name}</TableCell>
+                            <TableCell className="text-right w-40">{fmt(r.amount)}</TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow className="font-bold border-t-2">
+                          <TableCell colSpan={2}>إجمالي {sec.ar}</TableCell>
+                          <TableCell className="text-right">{fmt(income.sums[sec.key])}</TableCell>
                         </TableRow>
-                      ))}
-                      <TableRow className="font-bold border-t-2">
-                        <TableCell colSpan={2}>Total {t === "revenue" ? "Revenue" : "Expenses"}</TableCell>
-                        <TableCell className="text-right">{fmt(t === "revenue" ? grouped.totals.revenue : grouped.totals.expenses)}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-              ))}
+                      </TableBody>
+                    </Table>
+                    {subtotal && (
+                      <div className="mt-2 flex justify-between rounded bg-muted px-3 py-2 font-bold">
+                        <span>{subtotal.label}</span>
+                        <span className={subtotal.value < 0 ? "text-destructive" : ""}>{fmt(subtotal.value)}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
               <div className="border-t-4 pt-3 flex justify-between font-bold text-lg">
-                <span>Net Income</span>
-                <span className={grouped.netIncome < 0 ? "text-destructive" : "text-primary"}>{fmt(grouped.netIncome)}</span>
+                <span>صافي الربح / الخسارة — Net Profit</span>
+                <span className={income.totals.netProfit < 0 ? "text-destructive" : "text-primary"}>{fmt(income.totals.netProfit)}</span>
               </div>
             </CardContent>
           </Card>

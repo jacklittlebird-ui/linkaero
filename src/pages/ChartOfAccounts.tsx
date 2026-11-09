@@ -68,8 +68,14 @@ export default function ChartOfAccountsPage() {
 
   const handleSave = async () => {
     if (!form.code || !form.name) { toast({ title: "Error", description: "Code and name required", variant: "destructive" }); return; }
+    if (!form.parent_id && !(editItem && !editItem.parent_id)) {
+      toast({ title: "Parent account required", description: "يجب ربط الحساب بحساب رئيسي/فرعي (ميزانية أو قائمة دخل)", variant: "destructive" });
+      return;
+    }
     const payload: any = { ...form, opening_balance: Number(form.opening_balance) || 0 };
     if (!payload.parent_id) payload.parent_id = null;
+    const parent = data.find(a => a.id === payload.parent_id);
+    if (parent) { payload.account_type = parent.account_type; payload.level = (parent.level || 0) + 1; }
     if (editItem) { await update({ id: editItem.id, ...payload }); } else { await add(payload); }
     setDialogOpen(false);
   };
@@ -155,10 +161,13 @@ export default function ChartOfAccountsPage() {
                     </Select>
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground">Parent Account</label>
-                    <Select value={form.parent_id || "none"} onValueChange={v => setForm({ ...form, parent_id: v === "none" ? "" : v })}>
+                    <label className="text-xs text-muted-foreground">Parent Account (required) — الحساب الرئيسي</label>
+                    <Select value={form.parent_id || "none"} onValueChange={v => {
+                      const p = data.find(a => a.id === v);
+                      setForm({ ...form, parent_id: v === "none" ? "" : v, ...(p ? { account_type: p.account_type, level: (p.level || 0) + 1 } : {}) });
+                    }}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectItem value="none">No Parent (Root)</SelectItem>{groupAccounts.map(a => <SelectItem key={a.id} value={a.id}>{a.code} - {a.name}</SelectItem>)}</SelectContent>
+                      <SelectContent>{editItem && !editItem.parent_id && <SelectItem value="none">No Parent (Root)</SelectItem>}{groupAccounts.map(a => <SelectItem key={a.id} value={a.id}>{a.code} - {a.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                 </div>
