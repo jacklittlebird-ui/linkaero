@@ -47,7 +47,7 @@ import { exportToExcel } from "@/lib/exportExcel";
 import { format } from "date-fns";
 import { Command, CommandInput, CommandItem, CommandList, CommandEmpty } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronsUpDown, Check } from "lucide-react";
+import { ChevronsUpDown, Check, Pencil } from "lucide-react";
 import { filterTreasuryAccounts, selectTreasuryRate } from "@/lib/treasuryEntry";
 
 type VoucherType = "receipt" | "payment" | "pending";
@@ -55,6 +55,9 @@ type PaymentSubtype = "general" | "pending_custody" | "advance" | "cost";
 type VoucherStatus =
   | "draft" | "pending_approval" | "approved" | "posted" | "settled" | "void";
 type TabKey = "receipt" | "general" | "pending_custody" | "advance" | "cost" | "balances" | "fx";
+
+// Editing is allowed only before posting to the ledger.
+const EDITABLE_STATUSES: VoucherStatus[] = ["draft", "pending_approval", "approved"];
 
 const STATUS_VARIANT: Record<VoucherStatus, "default" | "secondary" | "destructive" | "outline"> = {
   draft: "outline",
@@ -251,6 +254,7 @@ export default function TreasuryVouchersPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [numberRequest, setNumberRequest] = useState(0);
   const [form, setForm] = useState(emptyForm(null));
+  const [editing, setEditing] = useState<Voucher | null>(null);
   const [statusFilter, setStatusFilter] = useState<"all" | VoucherStatus>("all");
   const [revalDate, setRevalDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
   const [settleTarget, setSettleTarget] = useState<Voucher | null>(null);
@@ -262,7 +266,7 @@ export default function TreasuryVouchersPage() {
 
   const { data: voucherNumber, isFetching: numberLoading, isError: numberError } = useQuery({
     queryKey: ["treasury_number_reservation", numberRequest, form.payment_subtype, form.voucher_date],
-    enabled: dialogOpen && !!user,
+    enabled: dialogOpen && !!user && !editing,
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     retry: false,
@@ -471,7 +475,8 @@ export default function TreasuryVouchersPage() {
 
   const create = useMutation({
     mutationFn: async () => {
-      if (!voucherNumber || numberLoading) throw new Error("انتظر إصدار رقم السند");
+      if (!editing && (!voucherNumber || numberLoading)) throw new Error("انتظر إصدار رقم السند");
+      if (editing && !EDITABLE_STATUSES.includes(editing.status)) throw new Error("لا يمكن تعديل سند بعد ترحيله");
       if (automaticRate === null) throw new Error("لا يوجد سعر موثق من البنك المركزي لهذه العملة والتاريخ");
       if (!form.cash_account_id && !form.bank_account_id) throw new Error("اختر الخزينة أو الحساب البنكي");
       if (!form.amount || form.amount <= 0) throw new Error("Amount must be greater than zero");
@@ -491,7 +496,7 @@ export default function TreasuryVouchersPage() {
 
       const isReceipt = form.payment_subtype === null;
       const payload: Record<string, unknown> = {
-        number_reservation_id: voucherNumber.id,
+        number_reservation_id: editing ? undefined : voucherNumber!.id,
         voucher_type: isReceipt ? "receipt" : form.payment_subtype === "pending_custody" ? "pending" : "payment",
         payment_subtype: form.payment_subtype,
         pending_kind: form.payment_subtype === "pending_custody" ? form.pending_kind : null,
@@ -523,6 +528,13 @@ export default function TreasuryVouchersPage() {
         status: "draft",
         created_by: user?.id ?? null,
       };
+      if (editing) {
+        delete payload.number_reservation_id; delete payload.status; delete payload.created_by;
+        const { data, error } = await (supabase.from as any)("treasury_vouchers").update(payload)
+          .eq("id", editing.id).in("status", EDITABLE_STATUSES).select("voucher_no").single();
+        if (error) throw error;
+        return data as { voucher_no: string };
+      }
       const { data, error } = await (supabase.from as any)("treasury_vouchers").insert(payload).select("voucher_no").single();
       if (error) throw error;
       return data as { voucher_no: string };
@@ -531,7 +543,8 @@ export default function TreasuryVouchersPage() {
       qc.invalidateQueries({ queryKey: ["treasury_vouchers"] });
       qc.invalidateQueries({ queryKey: ["v_treasury_balances"] });
       setDialogOpen(false);
-      toast.success(`تم إنشاء السند / Voucher created: ${saved.voucher_no}`);
+      toast.success(editing ? `تم تعديل السند / Voucher updated: ${saved.voucher_no}` : `تم إنشاء السند / Voucher created: ${saved.voucher_no}`);
+      setEditing(null);
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -676,11 +689,24 @@ export default function TreasuryVouchersPage() {
     const subtype: PaymentSubtype | null =
       tab === "receipt" || tab === "balances" || tab === "fx" ? null : (tab as PaymentSubtype);
     setActiveTab(tab === "balances" || tab === "fx" ? "receipt" : tab);
+    setEditing(null);
     setForm(emptyForm(subtype));
     setNumberRequest((request) => request + 1);
     setDialogOpen(true);
   };
 
+
+  const openEdit = (v: Voucher) => {
+    const base = emptyForm(v.payment_subtype);
+    const next: any = { ...base };
+    for (const k of Object.keys(base)) {
+      const val = (v as any)[k];
+      if (val !== undefined && val !== null) next[k] = val;
+    }
+    setEditing(v);
+    setForm(next);
+    setDialogOpen(true);
+  };
 
   const exportRows = () => {
     exportToExcel(
@@ -865,6 +891,11 @@ export default function TreasuryVouchersPage() {
                                 <HandCoins className="h-3 w-3" /><span className="ml-1">Recover</span>
                               </Button>
                             )}
+                            {EDITABLE_STATUSES.includes(v.status) && (
+                              <Button size="sm" variant="outline" onClick={() => openEdit(v)} title="تعديل / Edit">
+                                <Pencil className="h-3 w-3" /><span className="ml-1">تعديل</span>
+                              </Button>
+                            )}
                             {nextActions(v).map((a) => (
                               <Button key={a.to} size="sm"
                                 variant={a.to === "void" ? "destructive" : "outline"}
@@ -1033,7 +1064,7 @@ export default function TreasuryVouchersPage() {
             )}
             <div>
               <Label>Voucher Number</Label>
-              <Input aria-label="Voucher Number" value={numberLoading ? "جاري إصدار الرقم…" : voucherNumber?.voucher_no ?? ""} readOnly />
+              <Input aria-label="Voucher Number" value={editing ? editing.voucher_no : numberLoading ? "جاري إصدار الرقم…" : voucherNumber?.voucher_no ?? ""} readOnly />
               {numberError && <p className="mt-1 text-sm text-destructive">تعذر إصدار رقم السند؛ أعد فتح النموذج.</p>}
             </div>
             <div>
@@ -1289,7 +1320,7 @@ export default function TreasuryVouchersPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={() => create.mutate()} disabled={create.isPending || numberLoading || !voucherNumber || rateLoading || automaticRate === null}>
+            <Button onClick={() => create.mutate()} disabled={create.isPending || (!editing && (numberLoading || !voucherNumber)) || rateLoading || automaticRate === null}>
               {create.isPending ? "Saving..." : "Create Voucher"}
             </Button>
           </DialogFooter>
