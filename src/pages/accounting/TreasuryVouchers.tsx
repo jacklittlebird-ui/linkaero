@@ -174,6 +174,8 @@ const emptyForm = (subtype: PaymentSubtype | null) => ({
   invoice_id: "",
   vendor_invoice_id: "",
   on_account: false,
+  rate_manual: false,
+  manual_rate: 0,
 });
 
 // Cash in Transit — the intermediate account for cheques cashed from the bank
@@ -343,6 +345,8 @@ export default function TreasuryVouchersPage() {
     queryKey: ["treasury_cbe_quote", form.currency, form.voucher_date],
     enabled: dialogOpen && !!user && form.currency !== "EGP",
     queryFn: async () => {
+      // Pull today's official rates from the CBE website first (ignored if the site is unreachable).
+      await supabase.functions.invoke("sync-cbe-rates").catch(() => null);
       const { data, error } = await supabase.rpc("treasury_cbe_quote", {
         _currency: form.currency as typeof CURRENCIES[number], _date: form.voucher_date,
       });
@@ -350,7 +354,9 @@ export default function TreasuryVouchersPage() {
       return data as { buy_rate: number; sell_rate: number; rate_date: string; source: string } | null;
     },
   });
-  const automaticRate = selectTreasuryRate(form.currency, form.payment_subtype === null ? "receipt" : "payment", cbeQuote ?? null);
+  const cbeRate = selectTreasuryRate(form.currency, form.payment_subtype === null ? "receipt" : "payment", cbeQuote ?? null);
+  const manualActive = form.rate_manual && form.currency !== "EGP";
+  const automaticRate = manualActive ? (Number(form.manual_rate) > 0 ? Number(form.manual_rate) : null) : cbeRate;
 
   const { data: vouchers = [] } = useQuery({
     queryKey: ["treasury_vouchers"],
@@ -537,7 +543,7 @@ export default function TreasuryVouchersPage() {
     mutationFn: async () => {
       if (!editing && (!voucherNumber || numberLoading)) throw new Error("انتظر إصدار رقم السند");
       if (editing && !EDITABLE_STATUSES.includes(editing.status)) throw new Error("لا يمكن تعديل سند بعد ترحيله");
-      if (automaticRate === null) throw new Error("لا يوجد سعر موثق من البنك المركزي لهذه العملة والتاريخ");
+      if (automaticRate === null) throw new Error(manualActive ? "أدخل سعر الصرف اليدوي" : "لا يوجد سعر موثق من البنك المركزي — فعّل الإدخال اليدوي");
       if (!form.cash_account_id && !form.bank_account_id) throw new Error("اختر الخزينة أو الحساب البنكي");
       if (!form.amount || form.amount <= 0) throw new Error("Amount must be greater than zero");
       if (!form.account_id)
@@ -568,6 +574,7 @@ export default function TreasuryVouchersPage() {
         currency: form.currency,
         amount: Number(form.amount),
         exchange_rate: automaticRate,
+        rate_manual: manualActive,
         base_amount: 0,
         party_type: form.party_type || null,
         party_name: form.party_name || null,
@@ -775,6 +782,7 @@ export default function TreasuryVouchersPage() {
       const val = (v as any)[k];
       if (val !== undefined && val !== null) next[k] = val;
     }
+    next.manual_rate = Number(v.exchange_rate) || 0;
     setEditing(v);
     setForm(next);
     setDialogOpen(true);
@@ -1342,7 +1350,7 @@ export default function TreasuryVouchersPage() {
             <div>
               <Label>الحساب البنكي</Label>
               <Select value={form.bank_account_id}
-                onValueChange={(v) => setForm({ ...form, bank_account_id: v, cash_account_id: "" })}>
+                onValueChange={(v) => setForm({ ...form, bank_account_id: v, cash_account_id: "", currency: banks.find((b) => b.id === v)?.currency || form.currency })}>
                 <SelectTrigger><SelectValue placeholder="اختر البنك" /></SelectTrigger>
                 <SelectContent>
                   {banks.map((b) => <SelectItem key={b.id} value={b.id}>{b.account_name} ({b.currency})</SelectItem>)}
@@ -1353,7 +1361,7 @@ export default function TreasuryVouchersPage() {
               <Label>الخزينة النقدية</Label>
               <Select value={form.cash_account_id}
                 disabled={cashLoading || cashLoadError || cash.length === 0}
-                onValueChange={(v) => setForm({ ...form, cash_account_id: v, bank_account_id: "" })}>
+                onValueChange={(v) => setForm({ ...form, cash_account_id: v, bank_account_id: "", currency: cash.find((c) => c.id === v)?.currency || form.currency })}>
                 <SelectTrigger><SelectValue placeholder="اختر الخزينة" /></SelectTrigger>
                 <SelectContent>
                   {cash.map((c) => <SelectItem key={c.id} value={c.id}>{c.account_name} ({c.currency})</SelectItem>)}
@@ -1365,8 +1373,9 @@ export default function TreasuryVouchersPage() {
             </div>
             <div>
               <Label>العملة</Label>
-              <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select value={form.currency} disabled={!!(form.cash_account_id || form.bank_account_id)}
+                onValueChange={(v) => setForm({ ...form, currency: v })}>
+                <SelectTrigger aria-label="Currency"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
@@ -1378,13 +1387,23 @@ export default function TreasuryVouchersPage() {
                 onChange={(e) => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })} />
             </div>
             <div className="col-span-2">
-              <Label>{form.payment_subtype === null ? "سعر بيع البنك المركزي" : "سعر شراء البنك المركزي"}</Label>
+              <div className="flex items-center justify-between">
+                <Label>{manualActive ? "سعر الصرف (إدخال يدوي)" : form.payment_subtype === null ? "سعر بيع البنك المركزي" : "سعر شراء البنك المركزي"}</Label>
+                {form.currency !== "EGP" && <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" aria-label="Manual rate" checked={form.rate_manual}
+                    onChange={(e) => setForm({ ...form, rate_manual: e.target.checked, manual_rate: form.manual_rate || cbeRate || 0 })} />
+                  إيقاف الربط وإدخال السعر يدوياً
+                </label>}
+              </div>
               <div className="flex gap-2">
-                <Input aria-label="CBE exchange rate" value={automaticRate ?? ""} readOnly />
-                {form.currency !== "EGP" && <Button variant="outline" size="icon" aria-label="Refresh CBE rate" title="تحديث سعر البنك المركزي"
+                {manualActive
+                  ? <Input aria-label="Manual exchange rate" type="number" min="0" step="0.0001" value={form.manual_rate || ""}
+                      onChange={(e) => setForm({ ...form, manual_rate: parseFloat(e.target.value) || 0 })} />
+                  : <Input aria-label="CBE exchange rate" value={automaticRate ?? ""} readOnly />}
+                {form.currency !== "EGP" && !manualActive && <Button variant="outline" size="icon" aria-label="Refresh CBE rate" title="تحديث سعر البنك المركزي"
                   disabled={rateLoading} onClick={() => refreshRate()}><RefreshCw className="h-4 w-4" /></Button>}
               </div>
-              {form.currency !== "EGP" && <p className={`mt-1 text-sm ${automaticRate === null ? "text-destructive" : "text-muted-foreground"}`}>
+              {form.currency !== "EGP" && !manualActive && <p className={`mt-1 text-sm ${automaticRate === null ? "text-destructive" : "text-muted-foreground"}`}>
                 {rateLoading ? "جاري التحقق من السعر…" : automaticRate === null
                   ? "لا يوجد سعر موثق متاح من البنك المركزي لهذه العملة والتاريخ."
                   : `البنك المركزي المصري — ${cbeQuote?.rate_date ? format(new Date(`${cbeQuote.rate_date}T12:00:00`), "dd/MM/yyyy") : ""}`}

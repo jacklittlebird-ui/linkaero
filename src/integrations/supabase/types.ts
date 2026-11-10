@@ -12180,6 +12180,7 @@ export type Database = {
           posted_at: string | null
           posted_by: string | null
           print_unlocked: boolean
+          rate_manual: boolean
           recovered_amount: number
           reference: string | null
           repayment_plan: string | null
@@ -12234,6 +12235,7 @@ export type Database = {
           posted_at?: string | null
           posted_by?: string | null
           print_unlocked?: boolean
+          rate_manual?: boolean
           recovered_amount?: number
           reference?: string | null
           repayment_plan?: string | null
@@ -12288,6 +12290,7 @@ export type Database = {
           posted_at?: string | null
           posted_by?: string | null
           print_unlocked?: boolean
+          rate_manual?: boolean
           recovered_amount?: number
           reference?: string | null
           repayment_plan?: string | null
@@ -13780,6 +13783,7 @@ export type Database = {
           posted_at: string | null
           posted_by: string | null
           print_unlocked: boolean
+          rate_manual: boolean
           recovered_amount: number
           reference: string | null
           repayment_plan: string | null
@@ -14146,6 +14150,7 @@ export type Database = {
           posted_at: string | null
           posted_by: string | null
           print_unlocked: boolean
+          rate_manual: boolean
           recovered_amount: number
           reference: string | null
           repayment_plan: string | null
@@ -14337,6 +14342,7 @@ export type Database = {
           posted_at: string | null
           posted_by: string | null
           print_unlocked: boolean
+          rate_manual: boolean
           recovered_amount: number
           reference: string | null
           repayment_plan: string | null
@@ -14400,6 +14406,7 @@ export type Database = {
           posted_at: string | null
           posted_by: string | null
           print_unlocked: boolean
+          rate_manual: boolean
           recovered_amount: number
           reference: string | null
           repayment_plan: string | null

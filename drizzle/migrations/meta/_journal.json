@@ -134,6 +134,13 @@
       "when": 1794227542967,
       "tag": "0018_reserve_treasury_number_before_save",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794303265856,
+      "tag": "0019_treasury_manual_rate",
+      "breakpoints": true
     }
   ]
 }
