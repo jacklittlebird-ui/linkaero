@@ -10,10 +10,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
-    <div className="flex min-h-screen min-w-max overflow-x-auto">
+    <div className="flex min-h-screen w-full">
       {isMobile ? (
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-          <SheetContent side="left" className="p-0 w-64">
+          <SheetContent side={document.documentElement.dir === "rtl" ? "right" : "left"} className="p-0 w-64">
             <SheetTitle className="sr-only">Navigation</SheetTitle>
             <Sidebar onNavigate={() => setSidebarOpen(false)} />
           </SheetContent>
@@ -27,7 +27,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={!isMobile ? () => setSidebarCollapsed(c => !c) : undefined}
         />
-        <main className="flex-1 p-3 md:p-6 overflow-auto">{children}</main>
+        <main className="flex-1 min-w-0 p-3 md:p-6 overflow-auto">{children}</main>
       </div>
     </div>
   );
