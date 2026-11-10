@@ -141,6 +141,13 @@
       "when": 1794303265856,
       "tag": "0019_treasury_manual_rate",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1794304941302,
+      "tag": "0020_treasury_voucher_multi_lines",
+      "breakpoints": true
     }
   ]
 }

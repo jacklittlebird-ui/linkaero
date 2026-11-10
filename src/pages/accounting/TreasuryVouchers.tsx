@@ -176,7 +176,11 @@ const emptyForm = (subtype: PaymentSubtype | null) => ({
   on_account: false,
   rate_manual: false,
   manual_rate: 0,
+  lines: [{ account_id: "", amount: 0, description: "" }] as VoucherLine[],
 });
+
+type VoucherLine = { account_id: string; amount: number; description: string };
+const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
 
 // Cash in Transit — the intermediate account for cheques cashed from the bank
 // and later deposited into a cash box (avoids double-counting).
@@ -208,17 +212,27 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-function VoucherLivePreview({ isReceipt, title, voucherNo, date, party, amount, currency, rate, treasuryName, account, station, description }: {
+function VoucherLivePreview({ isReceipt, title, voucherNo, date, party, amount, currency, rate, treasuryName, lines, accounts, station, description }: {
   isReceipt: boolean; title: string; voucherNo: string; date: string; party: string; amount: number;
-  currency: string; rate: number | null; treasuryName: string; account?: GlAccount; station: string; description: string;
+  currency: string; rate: number | null; treasuryName: string; lines: VoucherLine[]; accounts: GlAccount[]; station: string; description: string;
 }) {
   const fmt = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const accName = account ? `${account.code} — ${account.name_ar || account.name}` : "— لم يُحدد الحساب —";
+  const accName = (id: string) => {
+    const a = accounts.find((x) => x.id === id);
+    return a ? `${a.code} — ${a.name_ar || a.name}` : "— لم يُحدد الحساب —";
+  };
   const tName = treasuryName || "— لم تُحدد الخزينة / البنك —";
-  const debit = isReceipt ? tName : accName;
-  const credit = isReceipt ? accName : tName;
+  const linesTotal = round2(lines.reduce((s, l) => s + (Number(l.amount) || 0), 0));
   const egp = rate ? amount * rate : null;
-  const ready = !!account && !!treasuryName && amount > 0;
+  const ready = lines.every((l) => l.account_id && l.amount > 0) && !!treasuryName && amount > 0 && linesTotal === round2(amount);
+  const treasuryRow = <tr className={`border-t ${isReceipt ? "bg-destructive/5" : "bg-success/5"}`}>
+    <td className={`p-2 ${isReceipt ? "" : "pr-6"}`}>{isReceipt ? "من" : "إلى"} حـ/ {tName}</td>
+    <td className="p-2 text-center font-semibold text-destructive">{isReceipt ? fmt(amount) : "—"}</td>
+    <td className="p-2 text-center font-semibold text-success">{isReceipt ? "—" : fmt(amount)}</td></tr>;
+  const lineRows = lines.map((l, i) => <tr key={i} className={`border-t ${isReceipt ? "bg-success/5" : "bg-destructive/5"}`}>
+    <td className={`p-2 ${isReceipt ? "pr-6" : ""}`}>{isReceipt ? "إلى" : "من"} حـ/ {accName(l.account_id)}{l.description ? <div className="text-xs text-muted-foreground">{l.description}</div> : null}</td>
+    <td className="p-2 text-center font-semibold text-destructive">{isReceipt ? "—" : fmt(Number(l.amount) || 0)}</td>
+    <td className="p-2 text-center font-semibold text-success">{isReceipt ? fmt(Number(l.amount) || 0) : "—"}</td></tr>);
   return (
     <aside className="space-y-4 lg:sticky lg:top-0 self-start">
       <div className="rounded-lg border p-4 space-y-3">
@@ -248,9 +262,10 @@ function VoucherLivePreview({ isReceipt, title, voucherNo, date, party, amount, 
             <tr><th className="p-2 text-right font-medium">الحساب</th><th className="p-2 font-medium">مدين</th><th className="p-2 font-medium">دائن</th></tr>
           </thead>
           <tbody>
-            <tr className="border-t bg-destructive/5"><td className="p-2">من حـ/ {debit}</td><td className="p-2 text-center font-semibold text-destructive">{fmt(amount)}</td><td className="p-2 text-center">—</td></tr>
-            <tr className="border-t bg-success/5"><td className="p-2 pr-6">إلى حـ/ {credit}</td><td className="p-2 text-center">—</td><td className="p-2 text-center font-semibold text-success">{fmt(amount)}</td></tr>
-            <tr className="border-t bg-navy font-semibold text-navy-foreground"><td className="p-2">الإجمالي</td><td className="p-2 text-center">{fmt(amount)}</td><td className="p-2 text-center">{fmt(amount)}</td></tr>
+            {isReceipt ? <>{treasuryRow}{lineRows}</> : <>{lineRows}{treasuryRow}</>}
+            <tr className="border-t bg-navy font-semibold text-navy-foreground"><td className="p-2">الإجمالي</td>
+              <td className="p-2 text-center">{fmt(isReceipt ? amount : linesTotal)}</td>
+              <td className="p-2 text-center">{fmt(isReceipt ? linesTotal : amount)}</td></tr>
           </tbody>
         </table>
       </div>
@@ -507,6 +522,9 @@ export default function TreasuryVouchersPage() {
     setForm((f) => ({
       ...f, movement_kind: kind, invoice_id: "", vendor_invoice_id: "", on_account: false,
       account_id: kind === "cash_in_transit" && transit ? transit.id : f.account_id,
+      lines: kind === "cash_in_transit" && transit
+        ? [{ ...(f.lines[0] ?? { amount: 0, description: "" }), account_id: transit.id }, ...f.lines.slice(1)]
+        : f.lines,
       party_type: kind === "customer" ? "Customer" : kind === "supplier" ? "Supplier" : f.party_type,
     }));
   };
@@ -545,13 +563,13 @@ export default function TreasuryVouchersPage() {
       if (editing && !EDITABLE_STATUSES.includes(editing.status)) throw new Error("لا يمكن تعديل سند بعد ترحيله");
       if (automaticRate === null) throw new Error(manualActive ? "أدخل سعر الصرف اليدوي" : "لا يوجد سعر موثق من البنك المركزي — فعّل الإدخال اليدوي");
       if (!form.cash_account_id && !form.bank_account_id) throw new Error("اختر الخزينة أو الحساب البنكي");
-      if (!form.amount || form.amount <= 0) throw new Error("Amount must be greater than zero");
-      if (!form.account_id)
-        throw new Error(
-          form.payment_subtype === null
-            ? "Select the credit account from the chart of accounts"
-            : "Select the debit account from the chart of accounts",
-        );
+      if (!form.amount || form.amount <= 0) throw new Error("المبلغ يجب أن يكون أكبر من صفر");
+      if (form.lines.length === 0 || form.lines.some((l) => !l.account_id))
+        throw new Error(form.payment_subtype === null ? "اختر الحساب الدائن لكل بند" : "اختر الحساب المدين لكل بند");
+      if (form.lines.some((l) => !(Number(l.amount) > 0))) throw new Error("مبلغ كل بند يجب أن يكون أكبر من صفر");
+      const linesSum = round2(form.lines.reduce((s, l) => s + Number(l.amount), 0));
+      if (linesSum !== round2(form.amount))
+        throw new Error(`إجمالي البنود (${num(linesSum)}) يجب أن يساوي إجمالي الخزينة (${num(form.amount)})`);
 
       if (form.movement_kind === "customer" && !form.party_name.trim())
         throw new Error("اكتب اسم العميل / Customer name is required");
@@ -585,7 +603,8 @@ export default function TreasuryVouchersPage() {
         airline_id: form.airline_id || null,
         supplier_id: form.supplier_id || null,
         service_type: form.service_type || null,
-        account_id: form.account_id || null,
+        account_id: form.lines[0]?.account_id || null,
+        lines: form.lines.map((l) => ({ account_id: l.account_id, amount: round2(l.amount), description: l.description || "" })),
         flight_schedule_id: form.flight_schedule_id || null,
         notes: form.notes || null,
         movement_kind: form.movement_kind || null,
@@ -753,6 +772,17 @@ export default function TreasuryVouchersPage() {
         <tr><th>Description / البيان</th><td>${v.description ?? ""}</td></tr>
         <tr><th>Status / الحالة</th><td>${STATUS_LABEL[v.status]}</td></tr>
       </table>
+      ${(() => {
+        const ls = ((v as any).lines as VoucherLine[] | undefined)?.length
+          ? (v as any).lines as VoucherLine[]
+          : [{ account_id: v.account_id || "", amount: Number(v.amount), description: v.description || "" }];
+        const rows = ls.map((l, i) => {
+          const a = glAccounts.find((x) => x.id === l.account_id);
+          return `<tr><td style="width:6%">${i + 1}</td><td>${a ? `${a.code} — ${a.name_ar || a.name}` : "—"}</td><td>${l.description || ""}</td><td style="text-align:right">${num(l.amount)}</td></tr>`;
+        }).join("");
+        return `<table><tr><th style="width:6%">#</th><th>${v.voucher_type === "receipt" ? "Credit account / الحساب الدائن" : "Debit account / الحساب المدين"}</th><th>Description / البيان</th><th style="text-align:right">Amount / المبلغ</th></tr>${rows}
+          <tr class="amt"><td colspan="3">Total / الإجمالي</td><td style="text-align:right">${num(v.amount)} ${v.currency}</td></tr></table>`;
+      })()}
       <div class="sign">
         <div class="box">Treasurer<br/>أمين الخزينة</div>
         <div class="box">Recipient<br/>المستلم</div>
@@ -783,6 +813,10 @@ export default function TreasuryVouchersPage() {
       if (val !== undefined && val !== null) next[k] = val;
     }
     next.manual_rate = Number(v.exchange_rate) || 0;
+    const saved = (v as any).lines as VoucherLine[] | undefined;
+    next.lines = saved && saved.length
+      ? saved.map((l) => ({ account_id: l.account_id, amount: Number(l.amount), description: l.description || "" }))
+      : [{ account_id: v.account_id || "", amount: Number(v.amount), description: "" }];
     setEditing(v);
     setForm(next);
     setDialogOpen(true);
@@ -1326,12 +1360,57 @@ export default function TreasuryVouchersPage() {
               </div>
             )}
 
-            <AccountPicker
-              accounts={glAccounts}
-              value={form.account_id}
-              onChange={(v) => setForm({ ...form, account_id: v })}
-              side={form.payment_subtype === null ? "credit" : "debit"}
-            />
+            <div className="col-span-2 space-y-3 rounded-lg border p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-navy">
+                  {form.payment_subtype === null ? "البنود الدائنة (الخزينة مدينة)" : "البنود المدينة (الخزينة دائنة)"}
+                </span>
+                <Button type="button" size="sm" variant="outline"
+                  onClick={() => setForm((f) => ({ ...f, lines: [...f.lines, { account_id: "", amount: 0, description: "" }] }))}>
+                  <Plus className="h-4 w-4 me-1" /> إضافة بند
+                </Button>
+              </div>
+              {form.lines.map((l, i) => (
+                <div key={i} className="grid grid-cols-2 gap-3 rounded-md bg-muted/30 p-3">
+                  <div className="col-span-2 flex items-center justify-between text-sm font-medium">
+                    <span>بند {i + 1}</span>
+                    {form.lines.length > 1 && <Button type="button" size="sm" variant="ghost" aria-label="حذف البند"
+                      onClick={() => setForm((f) => { const lines = f.lines.filter((_, j) => j !== i); return { ...f, lines, account_id: lines[0]?.account_id || "" }; })}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>}
+                  </div>
+                  <AccountPicker accounts={glAccounts} value={l.account_id}
+                    side={form.payment_subtype === null ? "credit" : "debit"}
+                    onChange={(id) => setForm((f) => {
+                      const lines = f.lines.map((x, j) => j === i ? { ...x, account_id: id } : x);
+                      return { ...f, lines, account_id: lines[0]?.account_id || "" };
+                    })} />
+                  <div>
+                    <Label>مبلغ البند</Label>
+                    <Input type="number" min="0" step="0.01" value={l.amount || ""}
+                      onChange={(e) => { const val = parseFloat(e.target.value) || 0;
+                        setForm((f) => ({ ...f, lines: f.lines.map((x, j) => j === i ? { ...x, amount: val } : x) })); }} />
+                  </div>
+                  <div>
+                    <Label>بيان البند</Label>
+                    <Input value={l.description}
+                      onChange={(e) => { const val = e.target.value;
+                        setForm((f) => ({ ...f, lines: f.lines.map((x, j) => j === i ? { ...x, description: val } : x) })); }} />
+                  </div>
+                </div>
+              ))}
+              {(() => {
+                const sum = round2(form.lines.reduce((s, l) => s + (Number(l.amount) || 0), 0));
+                const diff = round2((Number(form.amount) || 0) - sum);
+                return (
+                  <div className={`flex flex-wrap items-center justify-between gap-2 rounded-md p-2 text-sm ${diff === 0 && sum > 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                    <span>إجمالي البنود: <b>{num(sum)}</b> — إجمالي الخزينة: <b>{num(form.amount)}</b> — الفرق: <b>{num(diff)}</b></span>
+                    {diff !== 0 && sum > 0 && <Button type="button" size="sm" variant="outline"
+                      onClick={() => setForm((f) => ({ ...f, amount: sum }))}>اجعل إجمالي الخزينة = إجمالي البنود</Button>}
+                  </div>
+                );
+              })()}
+            </div>
 
             <div>
               <Label>نوع الطرف</Label>
@@ -1429,7 +1508,8 @@ export default function TreasuryVouchersPage() {
             currency={form.currency}
             rate={automaticRate}
             treasuryName={(form.cash_account_id ? cash.find((c) => c.id === form.cash_account_id)?.account_name : banks.find((b) => b.id === form.bank_account_id)?.account_name) ?? ""}
-            account={glAccounts.find((a) => a.id === form.account_id)}
+            lines={form.lines}
+            accounts={glAccounts}
             station={stations.find((x) => x.id === form.station_id)?.name ?? ""}
             description={form.description}
           />

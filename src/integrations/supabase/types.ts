@@ -12168,6 +12168,7 @@ export type Database = {
           id: string
           invoice_id: string | null
           journal_entry_id: string | null
+          lines: Json
           movement_kind: string | null
           notes: string | null
           number_reservation_id: string | null
@@ -12223,6 +12224,7 @@ export type Database = {
           id?: string
           invoice_id?: string | null
           journal_entry_id?: string | null
+          lines?: Json
           movement_kind?: string | null
           notes?: string | null
           number_reservation_id?: string | null
@@ -12278,6 +12280,7 @@ export type Database = {
           id?: string
           invoice_id?: string | null
           journal_entry_id?: string | null
+          lines?: Json
           movement_kind?: string | null
           notes?: string | null
           number_reservation_id?: string | null
@@ -13771,6 +13774,7 @@ export type Database = {
           id: string
           invoice_id: string | null
           journal_entry_id: string | null
+          lines: Json
           movement_kind: string | null
           notes: string | null
           number_reservation_id: string | null
@@ -14138,6 +14142,7 @@ export type Database = {
           id: string
           invoice_id: string | null
           journal_entry_id: string | null
+          lines: Json
           movement_kind: string | null
           notes: string | null
           number_reservation_id: string | null
@@ -14330,6 +14335,7 @@ export type Database = {
           id: string
           invoice_id: string | null
           journal_entry_id: string | null
+          lines: Json
           movement_kind: string | null
           notes: string | null
           number_reservation_id: string | null
@@ -14394,6 +14400,7 @@ export type Database = {
           id: string
           invoice_id: string | null
           journal_entry_id: string | null
+          lines: Json
           movement_kind: string | null
           notes: string | null
           number_reservation_id: string | null
