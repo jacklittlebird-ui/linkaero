@@ -306,3 +306,23 @@ main div.flex.items-center.justify-between > div,
 main div.flex.flex-wrap.items-center.justify-between > div {
   flex-wrap: wrap;
 }
+
+/* Tab / action bars (rows of buttons or tabs) wrap too, so nothing sits off-screen. */
+main div.flex.items-center.gap-1,
+main div.flex.items-center.gap-2,
+main div.flex.items-center.gap-3,
+main div.flex.items-center.gap-4 {
+  flex-wrap: wrap;
+}
+
+/* Any row whose direct children are buttons or links is an action bar: let it wrap. */
+main div.flex:has(> button),
+main div.flex:has(> a) {
+  flex-wrap: wrap;
+}
+
+/* Tab strips (shadcn TabsList) wrap onto new lines instead of sliding off-screen. */
+main [role="tablist"] {
+  flex-wrap: wrap;
+  height: auto;
+}
