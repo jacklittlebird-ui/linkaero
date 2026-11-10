@@ -930,30 +930,30 @@ export default function TreasuryVouchersPage() {
         {TAB_META.filter((t) => t.key !== "balances").map((t) => (
           <TabsContent key={t.key} value={t.key} className="mt-4">
             <Card>
-              <CardContent className="pt-6 overflow-x-auto">
-                <Table>
+              <CardContent className="pt-6 overflow-x-auto" dir="rtl">
+                <Table className="[&_th]:text-right">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Voucher No</TableHead>
-                      <TableHead>Journal No / رقم القيد</TableHead>
-                      <TableHead>Date</TableHead>
-                      {t.key === "pending_custody" && <TableHead>Custody Kind</TableHead>}
-                      <TableHead>Party</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Currency</TableHead>
-                      <TableHead className="text-right">EGP Equivalent</TableHead>
-                      {t.key === "advance" && <TableHead className="text-right">Remaining</TableHead>}
-                      {t.key === "pending_custody" && <TableHead className="text-right">Settled / Returned</TableHead>}
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>رقم السند</TableHead>
+                      <TableHead>رقم القيد</TableHead>
+                      <TableHead>التاريخ</TableHead>
+                      {t.key === "pending_custody" && <TableHead>نوع العهدة</TableHead>}
+                      <TableHead>الطرف</TableHead>
+                      <TableHead>البيان</TableHead>
+                      <TableHead className="!text-left">المبلغ</TableHead>
+                      <TableHead>العملة</TableHead>
+                      <TableHead className="!text-left">المعادل بالجنيه</TableHead>
+                      {t.key === "advance" && <TableHead className="!text-left">المتبقي</TableHead>}
+                      {t.key === "pending_custody" && <TableHead className="!text-left">المسوّى / المرتد</TableHead>}
+                      <TableHead>الحالة</TableHead>
+                      <TableHead className="!text-left">الإجراءات</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filtered.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
-                          No vouchers yet.
+                          لا توجد سندات بعد.
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -971,43 +971,43 @@ export default function TreasuryVouchersPage() {
                           )}
                           <TableCell>{v.party_name || "—"}</TableCell>
                           <TableCell className="max-w-xs truncate" title={v.description}>{v.description}</TableCell>
-                          <TableCell className="text-right">{num(v.amount)}</TableCell>
+                          <TableCell className="text-left">{num(v.amount)}</TableCell>
                           <TableCell>{v.currency}</TableCell>
-                          <TableCell className="text-right">{num(v.base_amount)}</TableCell>
+                          <TableCell className="text-left">{num(v.base_amount)}</TableCell>
                           {t.key === "advance" && (
-                            <TableCell className="text-right">
+                            <TableCell className="text-left">
                               {num(Math.max(Number(v.amount) - Number(v.recovered_amount || 0), 0))}
                             </TableCell>
                           )}
                           {t.key === "pending_custody" && (
-                            <TableCell className="text-right">
+                            <TableCell className="text-left">
                               {v.settled_amount != null ? `${num(v.settled_amount)} / ${num(v.returned_amount)}` : "—"}
                             </TableCell>
                           )}
                           <TableCell><Badge variant={STATUS_VARIANT[v.status]}>{STATUS_LABEL[v.status]}</Badge></TableCell>
-                          <TableCell className="text-right space-x-1 whitespace-nowrap">
+                          <TableCell className="text-left whitespace-nowrap [&>button]:ms-1">
                             {v.payment_subtype === "advance" && !v.finance_approved_by && v.status !== "void" && (
                               <Button size="sm" variant="default"
                                 onClick={() => approveAdvance.mutate(v.id)} disabled={approveAdvance.isPending}>
-                                <CheckCircle2 className="h-3 w-3" /><span className="ml-1">Finance Approve</span>
+                                <CheckCircle2 className="h-3 w-3" /><span className="ms-1">Finance Approve</span>
                               </Button>
                             )}
                             {v.payment_subtype === "pending_custody" && v.status !== "settled" && v.status !== "void" && (
                               <Button size="sm" variant="secondary"
                                 onClick={() => { setSettleTarget(v); setSettleLines([{ account_id: "", amount: Number(v.amount), description: "" }]); }}>
-                                <CheckCircle2 className="h-3 w-3" /><span className="ml-1">Settle</span>
+                                <CheckCircle2 className="h-3 w-3" /><span className="ms-1">Settle</span>
                               </Button>
                             )}
                             {v.payment_subtype === "advance" && v.status !== "void" &&
                               Number(v.recovered_amount || 0) < Number(v.amount) && (
                               <Button size="sm" variant="secondary"
                                 onClick={() => { setRecoverTarget(v); setRecoverAmount(0); }}>
-                                <HandCoins className="h-3 w-3" /><span className="ml-1">Recover</span>
+                                <HandCoins className="h-3 w-3" /><span className="ms-1">Recover</span>
                               </Button>
                             )}
                             {EDITABLE_STATUSES.includes(v.status) && (
                               <Button size="sm" variant="outline" onClick={() => openEdit(v)} title="تعديل / Edit">
-                                <Pencil className="h-3 w-3" /><span className="ml-1">تعديل</span>
+                                <Pencil className="h-3 w-3" /><span className="ms-1">تعديل</span>
                               </Button>
                             )}
                             {nextActions(v).map((a) => (
@@ -1015,7 +1015,7 @@ export default function TreasuryVouchersPage() {
                                 variant={a.to === "void" ? "destructive" : "outline"}
                                 onClick={() => transition.mutate({ id: v.id, to: a.to })}
                                 disabled={transition.isPending}>
-                                {a.icon}<span className="ml-1">{a.label}</span>
+                                {a.icon}<span className="ms-1">{a.label}</span>
                               </Button>
                             ))}
                             <Button size="sm" variant="ghost" onClick={() => printVoucher(v)}
