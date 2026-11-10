@@ -8,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useUserStation } from "@/contexts/UserStationContext";
 import { useChannel } from "@/contexts/ChannelContext";
 import { useTranslation } from "react-i18next";
+import { rememberLanguageChoice } from "@/i18n";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -88,7 +89,7 @@ export default function Header({ onMenuClick, sidebarCollapsed, onToggleSidebar 
 
       {/* Language Toggle */}
       <button
-        onClick={() => i18n.changeLanguage(i18n.language === "ar" ? "en" : "ar")}
+        onClick={() => { rememberLanguageChoice(user?.email); i18n.changeLanguage(i18n.language === "ar" ? "en" : "ar"); }}
         className="p-2 rounded-full hover:bg-muted transition-colors shrink-0 flex items-center gap-1"
         title={i18n.language === "ar" ? "Switch to English" : "التبديل إلى العربية"}
       >
