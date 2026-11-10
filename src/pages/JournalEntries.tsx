@@ -292,12 +292,12 @@ export default function JournalEntriesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Journal Entries</h1>
           <p className="text-muted-foreground text-sm">القيود اليومية · {entries.length} entries</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={handleExportExcel}><Download size={14} className="mr-1" /> Excel</Button>
           <Button variant="outline" size="sm" onClick={handleExportPdf}><Download size={14} className="mr-1" /> PDF</Button>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

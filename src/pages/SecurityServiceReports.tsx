@@ -2042,7 +2042,7 @@ export default function SecurityServiceReportsPage() {
 
 
       {reviewIdsFilter && reviewIdsFilter.length > 0 && (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-2 text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-2 text-sm">
           <div>
             <span className="font-semibold text-warning-foreground">Filtered to {reviewIdsFilter.length} security assignment{reviewIdsFilter.length === 1 ? "" : "s"}</span>
             <span className="text-muted-foreground ml-2">flagged by Pre-Invoice Validation. Fix issues, then approve.</span>
@@ -2058,7 +2058,7 @@ export default function SecurityServiceReportsPage() {
 
       {/* Station-only sub-tabs (All vs Rejected) */}
       {isStationView && (
-        <div className="flex items-center gap-2 border-b">
+        <div className="flex flex-wrap items-center gap-2 border-b">
           <button
             onClick={() => { setStationTab("all");  }}
             className={`px-4 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors ${
@@ -2090,7 +2090,7 @@ export default function SecurityServiceReportsPage() {
 
       {/* Operations-only sub-tabs (All vs Modified) */}
       {isOperationsView && (
-        <div className="flex items-center gap-2 border-b">
+        <div className="flex flex-wrap items-center gap-2 border-b">
           <button
             onClick={() => { setOpsTab("all");  }}
             className={`px-4 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors ${

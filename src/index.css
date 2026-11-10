@@ -298,3 +298,11 @@ html.no-animations *::after {
 /* Compact density */
 html.compact .stat-card { padding: 0.5rem 0.75rem; }
 html.compact .data-table-row td { padding-top: 0.4rem; padding-bottom: 0.4rem; }
+
+/* Page toolbars must stay reachable at every width (PC / tablet / phone):
+   header and action rows wrap onto a new line instead of pushing buttons off-screen. */
+main div.flex.items-center.justify-between,
+main div.flex.items-center.justify-between > div,
+main div.flex.flex-wrap.items-center.justify-between > div {
+  flex-wrap: wrap;
+}

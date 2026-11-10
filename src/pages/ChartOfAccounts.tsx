@@ -127,12 +127,12 @@ export default function ChartOfAccountsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Chart of Accounts</h1>
           <p className="text-muted-foreground text-sm">شجرة الحسابات · {data.length} accounts</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={() => {
             exportToExcel(data.filter(a => !a.is_group).map(a => ({
               Code: a.code, Name: a.name, "Name AR": a.name_ar, Type: a.account_type,
