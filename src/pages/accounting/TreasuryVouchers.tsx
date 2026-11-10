@@ -48,7 +48,7 @@ import { format } from "date-fns";
 import { Command, CommandInput, CommandItem, CommandList, CommandEmpty } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import linkAeroLogo from "@/assets/linkaero-logo.png";
-import { ChevronsUpDown, Check, Pencil } from "lucide-react";
+import { ChevronsUpDown, Check, Pencil, Trash2 } from "lucide-react";
 import { filterTreasuryAccounts, selectTreasuryRate } from "@/lib/treasuryEntry";
 
 type VoucherType = "receipt" | "payment" | "pending";
