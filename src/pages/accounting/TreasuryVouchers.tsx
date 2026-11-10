@@ -197,6 +197,65 @@ const num = (n: unknown) =>
   Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 // Searchable chart-of-accounts picker (search by code or by Arabic/English name).
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="col-span-2 flex items-center gap-3 pt-2">
+      <span className="text-sm font-semibold text-primary">{children}</span>
+      <span className="h-px flex-1 bg-border" />
+    </div>
+  );
+}
+
+function VoucherLivePreview({ isReceipt, title, voucherNo, date, party, amount, currency, rate, treasuryName, account, station, description }: {
+  isReceipt: boolean; title: string; voucherNo: string; date: string; party: string; amount: number;
+  currency: string; rate: number | null; treasuryName: string; account?: GlAccount; station: string; description: string;
+}) {
+  const fmt = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const accName = account ? `${account.code} — ${account.name_ar || account.name}` : "— لم يُحدد الحساب —";
+  const tName = treasuryName || "— لم تُحدد الخزينة / البنك —";
+  const debit = isReceipt ? tName : accName;
+  const credit = isReceipt ? accName : tName;
+  const egp = rate ? amount * rate : null;
+  const ready = !!account && !!treasuryName && amount > 0;
+  return (
+    <aside className="space-y-4 lg:sticky lg:top-0 self-start">
+      <div className="rounded-lg border bg-muted/40 p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="font-semibold">{title}</span>
+          <span className="text-sm text-muted-foreground">{voucherNo}</span>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {date ? format(new Date(`${date}T12:00:00`), "dd/MM/yyyy") : ""}{station ? ` • ${station}` : ""}
+        </div>
+        <div className="rounded-md bg-background p-3 text-center">
+          <div className="text-2xl font-bold">{fmt(amount)} <span className="text-base">{currency}</span></div>
+          {currency !== "EGP" && <div className="text-sm text-muted-foreground">
+            {egp !== null ? `المعادل: ${fmt(egp)} EGP` : "لا يوجد سعر صرف"}
+          </div>}
+        </div>
+        <div className="text-sm"><span className="text-muted-foreground">{isReceipt ? "مستلم من: " : "يصرف إلى: "}</span>{party || "—"}</div>
+        {description && <div className="text-sm"><span className="text-muted-foreground">البيان: </span>{description}</div>}
+      </div>
+      <div className="rounded-lg border">
+        <div className="flex items-center justify-between border-b px-4 py-2">
+          <span className="text-sm font-semibold">معاينة القيد</span>
+          <Badge variant={ready ? "default" : "outline"}>{ready ? "قيد متوازن" : "غير مكتمل"}</Badge>
+        </div>
+        <table className="w-full text-sm">
+          <thead className="bg-muted/40 text-muted-foreground">
+            <tr><th className="p-2 text-right font-medium">الحساب</th><th className="p-2 font-medium">مدين</th><th className="p-2 font-medium">دائن</th></tr>
+          </thead>
+          <tbody>
+            <tr className="border-t"><td className="p-2">من حـ/ {debit}</td><td className="p-2 text-center">{fmt(amount)}</td><td className="p-2 text-center">—</td></tr>
+            <tr className="border-t"><td className="p-2 pr-6">إلى حـ/ {credit}</td><td className="p-2 text-center">—</td><td className="p-2 text-center">{fmt(amount)}</td></tr>
+            <tr className="border-t font-semibold"><td className="p-2">الإجمالي</td><td className="p-2 text-center">{fmt(amount)}</td><td className="p-2 text-center">{fmt(amount)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </aside>
+  );
+}
+
 function AccountPicker({
   accounts, value, onChange, side,
 }: {
@@ -214,23 +273,23 @@ function AccountPicker({
     <div className="col-span-2">
       <Label>
         {side === "debit"
-          ? "Debit account — البند المدين (الخزينة دائنة)"
-          : "Credit account — البند الدائن (الخزينة مدينة)"}
+          ? "البند المدين (الخزينة دائنة)"
+          : "البند الدائن (الخزينة مدينة)"}
       </Label>
       <Popover open={open} onOpenChange={(next) => { setOpen(next); if (next) setQ(""); }} modal>
         <PopoverTrigger asChild>
           <Button variant="outline" role="combobox" aria-expanded={open} aria-label="Select chart account"
             className="w-full justify-between h-auto min-h-10 text-start font-normal">
-            <span className="min-w-0 whitespace-normal">{selected ? `${selected.code} — ${selected.name_ar || selected.name}` : "اختر الحساب / Select account"}</span>
+            <span className="min-w-0 whitespace-normal">{selected ? `${selected.code} — ${selected.name_ar || selected.name}` : "اختر الحساب"}</span>
             <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
           <Command shouldFilter={false}>
-            <Label className="block px-3 pt-2">اسم الحساب أو رقمه / Account name or code</Label>
+            <Label className="block px-3 pt-2">ابحث باسم الحساب أو رقمه</Label>
             <CommandInput value={q} onValueChange={setQ} aria-label="Search account by code or name" />
             <CommandList>
-              <CommandEmpty>لا يوجد حساب مطابق / No matching account</CommandEmpty>
+              <CommandEmpty>لا يوجد حساب مطابق</CommandEmpty>
               {results.map((a) => (
                 <CommandItem key={a.id} value={a.id} onSelect={() => { onChange(a.id); setOpen(false); }}>
                   <span className="min-w-0 flex-1 whitespace-normal">{a.code} — {a.name_ar || a.name}</span>
@@ -1051,16 +1110,23 @@ export default function TreasuryVouchersPage() {
 
       {/* Create voucher */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              New {form.payment_subtype ? SUBTYPE_LABEL[form.payment_subtype] : "Receipt"} Voucher
-            </DialogTitle>
+        <DialogContent dir="rtl" className="max-w-6xl max-h-[92vh] overflow-y-auto text-right">
+          <DialogHeader className="border-b pb-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <DialogTitle className="text-xl">
+                {editing ? "تعديل " : ""}{form.payment_subtype ? SUBTYPE_LABEL_AR[form.payment_subtype] : "سند قبض"}
+              </DialogTitle>
+              <Badge variant={form.payment_subtype === null ? "default" : "secondary"} className="text-sm">
+                {editing ? editing.voucher_no : voucherNumber?.voucher_no ?? "…"}
+              </Badge>
+            </div>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="grid grid-cols-2 gap-4 content-start">
+            <SectionTitle>البيانات الأساسية</SectionTitle>
             {form.payment_subtype && (
               <div className="col-span-2">
-                <Label>Payment voucher type</Label>
+                <Label>نوع إيصال الصرف</Label>
                 <Select value={form.payment_subtype}
                   onValueChange={(v) => setForm({ ...form, payment_subtype: v as PaymentSubtype })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -1073,28 +1139,28 @@ export default function TreasuryVouchersPage() {
               </div>
             )}
             <div>
-              <Label>Voucher Number</Label>
+              <Label>رقم السند</Label>
               <Input aria-label="Voucher Number" value={editing ? editing.voucher_no : numberLoading ? "جاري إصدار الرقم…" : voucherNumber?.voucher_no ?? ""} readOnly />
               {numberError && <p className="mt-1 text-sm text-destructive">تعذر إصدار رقم السند؛ أعد فتح النموذج.</p>}
             </div>
             <div>
-              <Label>Voucher Date</Label>
+              <Label>تاريخ السند</Label>
               <Input type="date" value={form.voucher_date} onChange={(e) => setForm({ ...form, voucher_date: e.target.value })} />
             </div>
             <div>
-              <Label>Company</Label>
+              <Label>الشركة</Label>
               <Select value={form.company_id} onValueChange={(v) => setForm({ ...form, company_id: v, station_id: "" })}>
-                <SelectTrigger><SelectValue placeholder="Select company" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="اختر الشركة" /></SelectTrigger>
                 <SelectContent>
                   {companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Station / Branch</Label>
+              <Label>المحطة / الفرع</Label>
               <Select value={form.station_id} onValueChange={(v) => setForm({ ...form, station_id: v })}
                 disabled={!form.company_id || !stations.some((s: any) => s.company_id === form.company_id)}>
-                <SelectTrigger><SelectValue placeholder={form.company_id && !stations.some((s: any) => s.company_id === form.company_id) ? "لا توجد محطات لهذه الشركة" : "Select station"} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={form.company_id && !stations.some((s: any) => s.company_id === form.company_id) ? "لا توجد محطات لهذه الشركة" : "اختر المحطة"} /></SelectTrigger>
                 <SelectContent>
                   {stations.filter((s: any) => s.company_id === form.company_id).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                 </SelectContent>
@@ -1103,19 +1169,19 @@ export default function TreasuryVouchersPage() {
 
             {isGeneral && (
               <div className="col-span-2">
-                <Label>Expense item</Label>
+                <Label>بند المصروف</Label>
                 <Input value={form.expense_item} onChange={(e) => setForm({ ...form, expense_item: e.target.value })} />
               </div>
             )}
 
             {isCustody && (
               <div>
-                <Label>Custody kind</Label>
+                <Label>نوع العهدة</Label>
                 <Select value={form.pending_kind} onValueChange={(v) => setForm({ ...form, pending_kind: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="company">Company custody</SelectItem>
-                    <SelectItem value="current">Current-account custody</SelectItem>
+                    <SelectItem value="company">عهدة شركة</SelectItem>
+                    <SelectItem value="current">عهدة جاري</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1123,7 +1189,7 @@ export default function TreasuryVouchersPage() {
 
             {isAdvance && (
               <div>
-                <Label>Repayment plan</Label>
+                <Label>خطة السداد</Label>
                 <Select value={form.repayment_plan} onValueChange={(v) => setForm({ ...form, repayment_plan: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -1136,18 +1202,18 @@ export default function TreasuryVouchersPage() {
             {isCost && (
               <>
                 <div>
-                  <Label>Cost centre 1 — Customer / Airline</Label>
+                  <Label>مركز التكلفة 1 — العميل / شركة الطيران</Label>
                   <Select value={form.airline_id} onValueChange={(v) => setForm({ ...form, airline_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select airline" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="اختر الشركة" /></SelectTrigger>
                     <SelectContent>
                       {airlines.map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label>Cost centre 3 — Service type</Label>
+                  <Label>مركز التكلفة 3 — نوع الخدمة</Label>
                   <Select value={form.service_type} onValueChange={(v) => setForm({ ...form, service_type: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select service" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="اختر الخدمة" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Security">Security</SelectItem>
                       <SelectItem value="Handling">Handling</SelectItem>
@@ -1155,28 +1221,29 @@ export default function TreasuryVouchersPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>Cost centre 4 — Supplier</Label>
+                  <Label>مركز التكلفة 4 — المورد</Label>
                   <Select value={form.supplier_id} onValueChange={(v) => setForm({ ...form, supplier_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select supplier" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="اختر المورد" /></SelectTrigger>
                     <SelectContent>
                       {suppliers.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="col-span-2 text-xs text-muted-foreground">
-                  Cost centre 2 (station) is set above; the GL account is selected below.
+                  مركز التكلفة 2 (المحطة) محدد بالأعلى، والحساب المحاسبي يُختار بالأسفل.
                 </div>
                 <div className="col-span-2">
-                  <Label>Flight schedule ID (required for accounts starting with 8)</Label>
+                  <Label>رقم الرحلة (إلزامي للحسابات التي تبدأ بـ 8)</Label>
                   <Input value={form.flight_schedule_id}
                     onChange={(e) => setForm({ ...form, flight_schedule_id: e.target.value })} />
                 </div>
               </>
             )}
 
+            <SectionTitle>الحساب والطرف</SectionTitle>
             {(form.payment_subtype === null || isGeneral) && (
               <div className="col-span-2">
-                <Label>{form.payment_subtype === null ? "نوع المقبوضات / Receipt kind" : "نوع المدفوعات / Payment kind"}</Label>
+                <Label>{form.payment_subtype === null ? "نوع المقبوضات" : "نوع المدفوعات"}</Label>
                 <Select value={form.movement_kind} onValueChange={setKind}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -1200,17 +1267,17 @@ export default function TreasuryVouchersPage() {
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={form.on_account}
                     onChange={(e) => setForm({ ...form, on_account: e.target.checked, invoice_id: "", vendor_invoice_id: "" })} />
-                  دفعة تحت الحساب / Payment on account (بدون ربط بفاتورة)
+                  دفعة تحت الحساب (بدون ربط بفاتورة)
                 </label>
                 {!form.on_account && form.movement_kind === "customer" && (
                   <div>
-                    <Label>الفاتورة المحصلة / Invoice collected</Label>
+                    <Label>الفاتورة المحصلة</Label>
                     <Select value={form.invoice_id} onValueChange={(v) => {
                       const inv = openInvoices.find((i) => i.id === v);
                       setForm({ ...form, invoice_id: v, party_name: form.party_name || inv?.operator || "",
                         reference: inv?.invoice_no ?? form.reference });
                     }}>
-                      <SelectTrigger><SelectValue placeholder="Select invoice" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="اختر الفاتورة" /></SelectTrigger>
                       <SelectContent className="max-h-72">
                         {openInvoices.map((i) => (
                           <SelectItem key={i.id} value={i.id}>
@@ -1223,13 +1290,13 @@ export default function TreasuryVouchersPage() {
                 )}
                 {!form.on_account && form.movement_kind === "supplier" && (
                   <div>
-                    <Label>فاتورة المورد / Vendor invoice</Label>
+                    <Label>فاتورة المورد</Label>
                     <Select value={form.vendor_invoice_id} onValueChange={(v) => {
                       const inv = openVendorInvoices.find((i) => i.id === v);
                       setForm({ ...form, vendor_invoice_id: v, party_name: form.party_name || inv?.vendor_name || "",
                         reference: inv?.invoice_no ?? form.reference });
                     }}>
-                      <SelectTrigger><SelectValue placeholder="Select vendor invoice" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="اختر فاتورة المورد" /></SelectTrigger>
                       <SelectContent className="max-h-72">
                         {openVendorInvoices.map((i) => (
                           <SelectItem key={i.id} value={i.id}>
@@ -1256,34 +1323,35 @@ export default function TreasuryVouchersPage() {
             />
 
             <div>
-              <Label>Party Type</Label>
+              <Label>نوع الطرف</Label>
               <Select value={form.party_type} onValueChange={(v) => setForm({ ...form, party_type: v })}>
-                <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="اختر النوع" /></SelectTrigger>
                 <SelectContent>
                   {PARTY_TYPES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>{isCustody || isAdvance ? "Beneficiary" : "Party Name"}</Label>
+              <Label>{isCustody || isAdvance ? "المستفيد" : "اسم الطرف"}</Label>
               <Input value={form.party_name} onChange={(e) => setForm({ ...form, party_name: e.target.value })} />
             </div>
+            <SectionTitle>الخزينة والمبلغ</SectionTitle>
             <div>
-              <Label>Bank Account</Label>
+              <Label>الحساب البنكي</Label>
               <Select value={form.bank_account_id}
                 onValueChange={(v) => setForm({ ...form, bank_account_id: v, cash_account_id: "" })}>
-                <SelectTrigger><SelectValue placeholder="Select bank" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="اختر البنك" /></SelectTrigger>
                 <SelectContent>
                   {banks.map((b) => <SelectItem key={b.id} value={b.id}>{b.account_name} ({b.currency})</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Treasury / Cash box</Label>
+              <Label>الخزينة النقدية</Label>
               <Select value={form.cash_account_id}
                 disabled={cashLoading || cashLoadError || cash.length === 0}
                 onValueChange={(v) => setForm({ ...form, cash_account_id: v, bank_account_id: "" })}>
-                <SelectTrigger><SelectValue placeholder="Select cash box" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="اختر الخزينة" /></SelectTrigger>
                 <SelectContent>
                   {cash.map((c) => <SelectItem key={c.id} value={c.id}>{c.account_name} ({c.currency})</SelectItem>)}
                 </SelectContent>
@@ -1293,7 +1361,7 @@ export default function TreasuryVouchersPage() {
               </p>}
             </div>
             <div>
-              <Label>Currency</Label>
+              <Label>العملة</Label>
               <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -1302,12 +1370,12 @@ export default function TreasuryVouchersPage() {
               </Select>
             </div>
             <div>
-              <Label>Amount</Label>
+              <Label>المبلغ</Label>
               <Input type="number" min="0" step="0.01" value={form.amount}
                 onChange={(e) => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })} />
             </div>
             <div className="col-span-2">
-              <Label>{form.payment_subtype === null ? "سعر بيع البنك المركزي / CBE selling rate" : "سعر شراء البنك المركزي / CBE buying rate"}</Label>
+              <Label>{form.payment_subtype === null ? "سعر بيع البنك المركزي" : "سعر شراء البنك المركزي"}</Label>
               <div className="flex gap-2">
                 <Input aria-label="CBE exchange rate" value={automaticRate ?? ""} readOnly />
                 {form.currency !== "EGP" && <Button variant="outline" size="icon" aria-label="Refresh CBE rate" title="تحديث سعر البنك المركزي"
@@ -1319,19 +1387,35 @@ export default function TreasuryVouchersPage() {
                   : `البنك المركزي المصري — ${cbeQuote?.rate_date ? format(new Date(`${cbeQuote.rate_date}T12:00:00`), "dd/MM/yyyy") : ""}`}
               </p>}
             </div>
+            <SectionTitle>البيان</SectionTitle>
             <div className="col-span-2">
-              <Label>Description</Label>
+              <Label>البيان المحاسبي</Label>
               <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </div>
             <div className="col-span-2">
-              <Label>Notes</Label>
+              <Label>ملاحظات</Label>
               <Textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+          <VoucherLivePreview
+            isReceipt={form.payment_subtype === null}
+            title={form.payment_subtype ? SUBTYPE_LABEL_AR[form.payment_subtype] : "سند قبض"}
+            voucherNo={editing ? editing.voucher_no : voucherNumber?.voucher_no ?? ""}
+            date={form.voucher_date}
+            party={form.party_name}
+            amount={Number(form.amount) || 0}
+            currency={form.currency}
+            rate={automaticRate}
+            treasuryName={(form.cash_account_id ? cash.find((c) => c.id === form.cash_account_id)?.account_name : banks.find((b) => b.id === form.bank_account_id)?.account_name) ?? ""}
+            account={glAccounts.find((a) => a.id === form.account_id)}
+            station={stations.find((x) => x.id === form.station_id)?.name ?? ""}
+            description={form.description}
+          />
+          </div>
+          <DialogFooter className="gap-2 border-t pt-4 sm:justify-start">
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>إلغاء</Button>
             <Button onClick={() => create.mutate()} disabled={create.isPending || (!editing && (numberLoading || !voucherNumber)) || rateLoading || automaticRate === null}>
-              {create.isPending ? "Saving..." : "Create Voucher"}
+              {create.isPending ? "جاري الحفظ…" : editing ? "حفظ التعديلات" : "حفظ السند"}
             </Button>
           </DialogFooter>
         </DialogContent>
