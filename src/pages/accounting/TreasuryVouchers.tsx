@@ -523,8 +523,8 @@ export default function TreasuryVouchersPage() {
       ...f, movement_kind: kind, invoice_id: "", vendor_invoice_id: "", on_account: false,
       account_id: kind === "cash_in_transit" && transit ? transit.id : f.account_id,
       lines: kind === "cash_in_transit" && transit
-        ? [{ ...(f.lines[0] ?? { amount: 0, description: "" }), account_id: transit.id }, ...f.lines.slice(1)]
-        : f.lines,
+        ? [{ ...((f.lines ?? [])[0] ?? { amount: 0, description: "" }), account_id: transit.id }, ...(f.lines ?? []).slice(1)]
+        : (f.lines ?? []),
       party_type: kind === "customer" ? "Customer" : kind === "supplier" ? "Supplier" : f.party_type,
     }));
   };
@@ -564,10 +564,10 @@ export default function TreasuryVouchersPage() {
       if (automaticRate === null) throw new Error(manualActive ? "أدخل سعر الصرف اليدوي" : "لا يوجد سعر موثق من البنك المركزي — فعّل الإدخال اليدوي");
       if (!form.cash_account_id && !form.bank_account_id) throw new Error("اختر الخزينة أو الحساب البنكي");
       if (!form.amount || form.amount <= 0) throw new Error("المبلغ يجب أن يكون أكبر من صفر");
-      if (form.lines.length === 0 || form.lines.some((l) => !l.account_id))
+      if ((form.lines ?? []).length === 0 || (form.lines ?? []).some((l) => !l.account_id))
         throw new Error(form.payment_subtype === null ? "اختر الحساب الدائن لكل بند" : "اختر الحساب المدين لكل بند");
-      if (form.lines.some((l) => !(Number(l.amount) > 0))) throw new Error("مبلغ كل بند يجب أن يكون أكبر من صفر");
-      const linesSum = round2(form.lines.reduce((s, l) => s + Number(l.amount), 0));
+      if ((form.lines ?? []).some((l) => !(Number(l.amount) > 0))) throw new Error("مبلغ كل بند يجب أن يكون أكبر من صفر");
+      const linesSum = round2((form.lines ?? []).reduce((s, l) => s + Number(l.amount), 0));
       if (linesSum !== round2(form.amount))
         throw new Error(`إجمالي البنود (${num(linesSum)}) يجب أن يساوي إجمالي الخزينة (${num(form.amount)})`);
 
@@ -603,8 +603,8 @@ export default function TreasuryVouchersPage() {
         airline_id: form.airline_id || null,
         supplier_id: form.supplier_id || null,
         service_type: form.service_type || null,
-        account_id: form.lines[0]?.account_id || null,
-        lines: form.lines.map((l) => ({ account_id: l.account_id, amount: round2(l.amount), description: l.description || "" })),
+        account_id: (form.lines ?? [])[0]?.account_id || null,
+        lines: form.lines?.map((l) => ({ account_id: l.account_id, amount: round2(l.amount), description: l.description || "" })),
         flight_schedule_id: form.flight_schedule_id || null,
         notes: form.notes || null,
         movement_kind: form.movement_kind || null,
@@ -1366,41 +1366,41 @@ export default function TreasuryVouchersPage() {
                   {form.payment_subtype === null ? "البنود الدائنة (الخزينة مدينة)" : "البنود المدينة (الخزينة دائنة)"}
                 </span>
                 <Button type="button" size="sm" variant="outline"
-                  onClick={() => setForm((f) => ({ ...f, lines: [...f.lines, { account_id: "", amount: 0, description: "" }] }))}>
+                  onClick={() => setForm((f) => ({ ...f, lines: [...(f.lines ?? []), { account_id: "", amount: 0, description: "" }] }))}>
                   <Plus className="h-4 w-4 me-1" /> إضافة بند
                 </Button>
               </div>
-              {form.lines.map((l, i) => (
+              {(form.lines ?? []).map((l, i) => (
                 <div key={i} className="grid grid-cols-2 gap-3 rounded-md bg-muted/30 p-3">
                   <div className="col-span-2 flex items-center justify-between text-sm font-medium">
                     <span>بند {i + 1}</span>
-                    {form.lines.length > 1 && <Button type="button" size="sm" variant="ghost" aria-label="حذف البند"
-                      onClick={() => setForm((f) => { const lines = f.lines.filter((_, j) => j !== i); return { ...f, lines, account_id: lines[0]?.account_id || "" }; })}>
+                    {(form.lines ?? []).length > 1 && <Button type="button" size="sm" variant="ghost" aria-label="حذف البند"
+                      onClick={() => setForm((f) => { const lines = (f.lines ?? []).filter((_, j) => j !== i); return { ...f, lines, account_id: lines[0]?.account_id || "" }; })}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>}
                   </div>
                   <AccountPicker accounts={glAccounts} value={l.account_id}
                     side={form.payment_subtype === null ? "credit" : "debit"}
                     onChange={(id) => setForm((f) => {
-                      const lines = f.lines.map((x, j) => j === i ? { ...x, account_id: id } : x);
+                      const lines = (f.lines ?? []).map((x, j) => j === i ? { ...x, account_id: id } : x);
                       return { ...f, lines, account_id: lines[0]?.account_id || "" };
                     })} />
                   <div>
                     <Label>مبلغ البند</Label>
                     <Input type="number" min="0" step="0.01" value={l.amount || ""}
                       onChange={(e) => { const val = parseFloat(e.target.value) || 0;
-                        setForm((f) => ({ ...f, lines: f.lines.map((x, j) => j === i ? { ...x, amount: val } : x) })); }} />
+                        setForm((f) => ({ ...f, lines: (f.lines ?? []).map((x, j) => j === i ? { ...x, amount: val } : x) })); }} />
                   </div>
                   <div>
                     <Label>بيان البند</Label>
                     <Input value={l.description}
                       onChange={(e) => { const val = e.target.value;
-                        setForm((f) => ({ ...f, lines: f.lines.map((x, j) => j === i ? { ...x, description: val } : x) })); }} />
+                        setForm((f) => ({ ...f, lines: (f.lines ?? []).map((x, j) => j === i ? { ...x, description: val } : x) })); }} />
                   </div>
                 </div>
               ))}
               {(() => {
-                const sum = round2(form.lines.reduce((s, l) => s + (Number(l.amount) || 0), 0));
+                const sum = round2((form.lines ?? []).reduce((s, l) => s + (Number(l.amount) || 0), 0));
                 const diff = round2((Number(form.amount) || 0) - sum);
                 return (
                   <div className={`flex flex-wrap items-center justify-between gap-2 rounded-md p-2 text-sm ${diff === 0 && sum > 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
@@ -1508,7 +1508,7 @@ export default function TreasuryVouchersPage() {
             currency={form.currency}
             rate={automaticRate}
             treasuryName={(form.cash_account_id ? cash.find((c) => c.id === form.cash_account_id)?.account_name : banks.find((b) => b.id === form.bank_account_id)?.account_name) ?? ""}
-            lines={form.lines}
+            lines={(form.lines ?? [])}
             accounts={glAccounts}
             station={stations.find((x) => x.id === form.station_id)?.name ?? ""}
             description={form.description}
