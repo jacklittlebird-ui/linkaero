@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 import { logAudit, flushAuditLogs } from "@/lib/auditLogger";
 import { clearCachedRoles } from "@/lib/roleCache";
-import { applyAccountDefaultLanguage } from "@/i18n";
 
 interface AuthContextType {
   session: Session | null;
@@ -25,7 +24,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setLoading(false);
-      applyAccountDefaultLanguage(session?.user?.email);
       if (event === "SIGNED_IN" && session?.user && lastUserRef.current?.id !== session.user.id) {
         logAudit({
           action: "login",

@@ -8,7 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useUserStation } from "@/contexts/UserStationContext";
 import { useChannel } from "@/contexts/ChannelContext";
 import { useTranslation } from "react-i18next";
-import { rememberLanguageChoice } from "@/i18n";
+import { rememberLanguageChoice, applyAccountDefaultLanguage } from "@/i18n";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -25,6 +25,8 @@ export default function Header({ onMenuClick, sidebarCollapsed, onToggleSidebar 
   const isMobile = useIsMobile();
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
   const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => { applyAccountDefaultLanguage(user?.email); }, [user?.email]);
 
   useEffect(() => {
     if (!user) return;
