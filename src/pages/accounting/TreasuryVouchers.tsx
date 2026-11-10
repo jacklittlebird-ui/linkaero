@@ -200,7 +200,7 @@ const num = (n: unknown) =>
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <div className="col-span-2 flex items-center gap-3 pt-2">
-      <span className="text-sm font-semibold text-primary">{children}</span>
+      <span className="border-s-4 border-warning ps-2 text-sm font-bold text-navy">{children}</span>
       <span className="h-px flex-1 bg-border" />
     </div>
   );
@@ -219,7 +219,7 @@ function VoucherLivePreview({ isReceipt, title, voucherNo, date, party, amount, 
   const ready = !!account && !!treasuryName && amount > 0;
   return (
     <aside className="space-y-4 lg:sticky lg:top-0 self-start">
-      <div className="rounded-lg border bg-muted/40 p-4 space-y-3">
+      <div className="rounded-lg border p-4 space-y-3">
         <div className="flex items-center justify-between">
           <span className="font-semibold">{title}</span>
           <span className="text-sm text-muted-foreground">{voucherNo}</span>
@@ -227,9 +227,9 @@ function VoucherLivePreview({ isReceipt, title, voucherNo, date, party, amount, 
         <div className="text-sm text-muted-foreground">
           {date ? format(new Date(`${date}T12:00:00`), "dd/MM/yyyy") : ""}{station ? ` • ${station}` : ""}
         </div>
-        <div className="rounded-md bg-background p-3 text-center">
+        <div className="rounded-md bg-navy p-3 text-center text-navy-foreground">
           <div className="text-2xl font-bold">{fmt(amount)} <span className="text-base">{currency}</span></div>
-          {currency !== "EGP" && <div className="text-sm text-muted-foreground">
+          {currency !== "EGP" && <div className="text-sm text-warning">
             {egp !== null ? `المعادل: ${fmt(egp)} EGP` : "لا يوجد سعر صرف"}
           </div>}
         </div>
@@ -246,9 +246,9 @@ function VoucherLivePreview({ isReceipt, title, voucherNo, date, party, amount, 
             <tr><th className="p-2 text-right font-medium">الحساب</th><th className="p-2 font-medium">مدين</th><th className="p-2 font-medium">دائن</th></tr>
           </thead>
           <tbody>
-            <tr className="border-t"><td className="p-2">من حـ/ {debit}</td><td className="p-2 text-center">{fmt(amount)}</td><td className="p-2 text-center">—</td></tr>
-            <tr className="border-t"><td className="p-2 pr-6">إلى حـ/ {credit}</td><td className="p-2 text-center">—</td><td className="p-2 text-center">{fmt(amount)}</td></tr>
-            <tr className="border-t font-semibold"><td className="p-2">الإجمالي</td><td className="p-2 text-center">{fmt(amount)}</td><td className="p-2 text-center">{fmt(amount)}</td></tr>
+            <tr className="border-t bg-destructive/5"><td className="p-2">من حـ/ {debit}</td><td className="p-2 text-center font-semibold text-destructive">{fmt(amount)}</td><td className="p-2 text-center">—</td></tr>
+            <tr className="border-t bg-success/5"><td className="p-2 pr-6">إلى حـ/ {credit}</td><td className="p-2 text-center">—</td><td className="p-2 text-center font-semibold text-success">{fmt(amount)}</td></tr>
+            <tr className="border-t bg-navy font-semibold text-navy-foreground"><td className="p-2">الإجمالي</td><td className="p-2 text-center">{fmt(amount)}</td><td className="p-2 text-center">{fmt(amount)}</td></tr>
           </tbody>
         </table>
       </div>
@@ -709,23 +709,26 @@ export default function TreasuryVouchersPage() {
     }
     const w = window.open("", "_blank", "width=800,height=900");
     if (!w) return;
+    const tone = v.voucher_type === "receipt" ? ["#16a34a", "#f0fdf4"]
+      : v.payment_subtype === "pending_custody" || v.payment_subtype === "advance" ? ["#b45309", "#fffbeb"] : ["#dc2626", "#fef2f2"];
     const kind = v.voucher_type === "receipt" ? "Receipt Voucher / سند قبض"
       : `${SUBTYPE_LABEL[(v.payment_subtype ?? "general") as PaymentSubtype]} / سند صرف`;
     w.document.write(`
       <html dir="ltr"><head><title>${v.voucher_no}</title>
       <style>
-        body{font-family:Arial,Helvetica,sans-serif;padding:32px;color:#111}
-        h1{font-size:20px;margin:0 0 4px} .sub{color:#555;margin-bottom:20px}
-        table{width:100%;border-collapse:collapse;margin-bottom:24px}
-        td,th{border:1px solid #bbb;padding:8px;font-size:13px;text-align:left}
-        th{background:#f3f4f6;width:34%}
-        .sign{display:flex;gap:16px;margin-top:48px}
-        .box{flex:1;border-top:1px solid #333;padding-top:8px;text-align:center;font-size:12px}
-        .head{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #1e3a8a;padding-bottom:12px;margin-bottom:20px}
+        body{font-family:Arial,Helvetica,sans-serif;padding:32px;color:#1f2937}
+        h1{font-size:20px;margin:0;color:#1e3a5f}
+        table{width:100%;border-collapse:collapse;margin-bottom:24px;border-radius:8px;overflow:hidden}
+        td,th{border:1px solid #e5e7eb;padding:10px;font-size:13px;text-align:left}
+        th{background:#f8fafc;color:#1e3a5f;width:34%}
+        .sign{display:flex;gap:16px;margin-top:56px}
+        .box{flex:1;border-top:2px solid #1e3a5f;padding-top:8px;text-align:center;font-size:12px;color:#1e3a5f}
+        .head{display:flex;align-items:center;justify-content:space-between;border-bottom:4px solid #1e3a5f;padding-bottom:12px;margin-bottom:20px}
         .head img{height:70px;object-fit:contain}
-        .head .co{text-align:right}
-        .kind{text-align:center;font-size:18px;font-weight:bold;margin:8px 0 4px}
-        .no{text-align:center;color:#555;margin-bottom:20px}
+        .kind{text-align:center;font-size:18px;font-weight:bold;margin:8px auto 4px;padding:10px;border:1px solid ${tone[0]};background:${tone[1]};color:${tone[0]};border-radius:8px}
+        .no{text-align:center;color:#1e3a5f;font-weight:bold;margin-bottom:20px}
+        .amt td{background:#1e3a5f;color:#fff;font-weight:bold;font-size:15px}
+        @media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
       </style></head><body>
       <div class="head">
         <img src="${window.location.origin}${linkAeroLogo}" alt="Link Aero" />
@@ -737,7 +740,7 @@ export default function TreasuryVouchersPage() {
         <tr><th>Journal No / رقم القيد</th><td>${(v as any).je?.entry_no ?? "—"}</td></tr>
         <tr><th>Date / التاريخ</th><td>${format(new Date(v.voucher_date), "dd/MM/yyyy")}</td></tr>
         <tr><th>Party / الطرف</th><td>${v.party_name ?? "—"}</td></tr>
-        <tr><th>Amount / المبلغ</th><td>${num(v.amount)} ${v.currency}</td></tr>
+        <tr class="amt"><th>Amount / المبلغ</th><td>${num(v.amount)} ${v.currency}</td></tr>
         <tr><th>Rate / سعر التحويل</th><td>${v.exchange_rate}</td></tr>
         <tr><th>EGP equivalent / المقابل بالجنيه</th><td>${num(v.base_amount)} EGP</td></tr>
         <tr><th>Description / البيان</th><td>${v.description ?? ""}</td></tr>
@@ -1111,7 +1114,7 @@ export default function TreasuryVouchersPage() {
       {/* Create voucher */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent dir="rtl" className="max-w-6xl max-h-[92vh] overflow-y-auto text-right">
-          <DialogHeader className="border-b pb-4">
+          <DialogHeader className={`-mx-6 -mt-6 rounded-t-lg border-b px-6 py-4 ${form.payment_subtype === null ? "bg-success/10 border-success/30" : form.payment_subtype === "pending_custody" || form.payment_subtype === "advance" ? "bg-warning/10 border-warning/30" : "bg-destructive/10 border-destructive/30"}`}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <DialogTitle className="text-xl">
                 {editing ? "تعديل " : ""}{form.payment_subtype ? SUBTYPE_LABEL_AR[form.payment_subtype] : "سند قبض"}
