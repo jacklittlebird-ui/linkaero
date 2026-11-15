@@ -326,3 +326,10 @@ main [role="tablist"] {
   flex-wrap: wrap;
   height: auto;
 }
+
+/* Always-visible scrollbars for wide operation tables */
+.ops-scroll { scrollbar-width: auto; scrollbar-color: hsl(var(--muted-foreground) / 0.6) hsl(var(--muted)); }
+.ops-scroll::-webkit-scrollbar { height: 12px; width: 12px; }
+.ops-scroll::-webkit-scrollbar-track { background: hsl(var(--muted)); }
+.ops-scroll::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.6); border-radius: 6px; }
+.ops-scroll thead th { position: sticky; top: 0; z-index: 1; background: hsl(var(--card)); }

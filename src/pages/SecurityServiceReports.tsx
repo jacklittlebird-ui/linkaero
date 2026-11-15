@@ -2217,7 +2217,7 @@ export default function SecurityServiceReportsPage() {
               )}
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="ops-scroll overflow-auto max-h-[70vh]">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-muted/30">
@@ -2548,7 +2548,7 @@ export default function SecurityServiceReportsPage() {
           </div>
         ) : (
         <>
-            <div className="overflow-x-auto">
+            <div className="ops-scroll overflow-auto max-h-[70vh]">
               <table className="w-full text-sm">
                 <thead>
                   <tr>

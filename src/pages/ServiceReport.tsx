@@ -1680,7 +1680,7 @@ function HandlingServiceReportContent() {
           <ServiceReportCalendarView reports={filtered} month={calMonth} onMonthChange={setCalMonth} onEdit={startEdit} invoiceStatusByFlight={invoiceStatusByFlight} channel={activeChannel} />
         ) : (
         <>
-          <div className="overflow-x-auto">
+          <div className="ops-scroll overflow-auto max-h-[70vh]">
           <table className="w-full text-sm">
             <thead>
               <tr>
