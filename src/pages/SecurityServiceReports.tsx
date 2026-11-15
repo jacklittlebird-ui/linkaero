@@ -2152,7 +2152,7 @@ export default function SecurityServiceReportsPage() {
       ) : isOperationsView && opsTab === "pending-approval" ? (
         <div className="space-y-4">
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="stat-strip">
             <div className="stat-card">
               <div className="stat-card-icon bg-destructive"><Clock size={20} /></div>
               <div><div className="text-xl font-bold text-foreground">{pendingTotal}</div><div className="text-xs text-muted-foreground">Rejected Total</div></div>
@@ -2314,7 +2314,7 @@ export default function SecurityServiceReportsPage() {
       ) : (
       <>
       {/* KPI Cards */}
-      <div className={`grid grid-cols-2 ${isReceivablesView ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-4`}>
+      <div className="stat-strip">
         <div className="stat-card">
           <div className="stat-card-icon bg-primary"><FileBarChart2 size={20} /></div>
           <div><div className="text-xl font-bold text-foreground">{totalReports}</div><div className="text-xs text-muted-foreground">Total Reports</div></div>
@@ -2336,7 +2336,7 @@ export default function SecurityServiceReportsPage() {
       </div>
 
       {/* Secondary Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="stat-strip">
         <div className="bg-card border rounded-lg p-3 flex items-center gap-3">
           <Users size={16} className="text-muted-foreground" />
           <div><div className="text-sm font-bold text-foreground">{totalStaffDeployed}</div><div className="text-xs text-muted-foreground">Staff Deployed</div></div>

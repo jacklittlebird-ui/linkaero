@@ -1526,7 +1526,7 @@ function HandlingServiceReportContent() {
 
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="stat-strip">
         <div className="stat-card">
           <div className="stat-card-icon bg-primary"><Plane size={20} /></div>
           <div><div className="text-xl md:text-2xl font-bold text-foreground">{totalFlights}</div><div className="text-xs text-muted-foreground">Total Flights</div></div>

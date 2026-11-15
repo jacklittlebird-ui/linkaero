@@ -27,7 +27,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={!isMobile ? () => setSidebarCollapsed(c => !c) : undefined}
         />
-        <main className="app-scroll flex-1 min-w-0 min-h-0 overflow-auto">
+        <main className="app-scroll app-main flex-1 min-w-0 min-h-0 overflow-auto">
           <div className="app-workspace p-3 md:p-6">{children}</div>
         </main>
       </div>
