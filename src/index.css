@@ -341,11 +341,34 @@ main [role="tablist"] {
 .app-scroll::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.6); border-radius: 7px; }
 
 /* Unified page scrollbar: wide tables no longer scroll inside their own box;
-   the whole work area scrolls together with one bar pinned to the window bottom. */
-main.app-scroll .overflow-x-auto,
-main.app-scroll .overflow-auto,
-main.app-scroll .ops-scroll,
-main.app-scroll .overflow-hidden:has(table) {
-  overflow: visible !important;
-  max-height: none !important;
+   the whole work area scrolls together with one bar pinned to the window bottom.
+   On narrow screens (phones) this is reversed: tables scroll inside their own box
+   again so the page never becomes wider than the screen and cards stay full width. */
+@media (min-width: 768px) {
+  main.app-scroll .overflow-x-auto,
+  main.app-scroll .overflow-auto,
+  main.app-scroll .ops-scroll,
+  main.app-scroll .overflow-hidden:has(table) {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+}
+
+/* Narrow screens: keep wide tables inside their own scrollable box. */
+@media (max-width: 767px) {
+  main.app-scroll .overflow-x-auto,
+  main.app-scroll .overflow-auto,
+  main.app-scroll .ops-scroll {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* The horizontal scrollbar track must not look like a divider strip across the page. */
+.app-scroll::-webkit-scrollbar-track,
+.ops-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.app-scroll {
+  scrollbar-color: hsl(var(--muted-foreground) / 0.6) transparent;
 }
