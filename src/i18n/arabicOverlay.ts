@@ -2,6 +2,9 @@
 // Arabic in the DOM when i18n language is "ar". Zero refactor to pages.
 // Skips inputs, code, script, style, and elements marked [data-no-translate].
 import i18n from "./index";
+import { toEnglish } from "./englishOverlay";
+
+let mode: "ar" | "en" = "ar";
 
 // Ordered longest-first to prevent partial overlaps ("Journal" before "Journal Entry")
 const DICTIONARY: Array<[RegExp, string]> = (
@@ -600,6 +603,7 @@ const DICTIONARY: Array<[RegExp, string]> = (
 const SKIP_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "CODE", "PRE", "TEXTAREA", "INPUT", "SELECT", "OPTION"]);
 
 function translateText(text: string): string {
+  if (mode === "en") return toEnglish(text);
   let out = text;
   for (const [re, ar] of DICTIONARY) out = out.replace(re, ar);
   return out;
@@ -704,18 +708,15 @@ function enable() {
   });
 }
 
-function disable() {
-  if (!observer) return;
-  observer.disconnect();
-  observer = null;
-  // Note: existing translated text remains until next reload; that's fine.
-}
 
 export function initArabicOverlay() {
-  const apply = (lng: string) => {
-    if (lng === "ar") enable();
-    else disable();
-  };
-  apply(i18n.language || "en");
-  i18n.on("languageChanged", apply);
+  const current = (i18n.language || "en").startsWith("ar") ? "ar" : "en";
+  mode = current as "ar" | "en";
+  enable();
+  i18n.on("languageChanged", (lng: string) => {
+    const next = lng.startsWith("ar") ? "ar" : "en";
+    if (next === current) return;
+    // Reload so every label is rebuilt cleanly in the chosen language
+    setTimeout(() => window.location.reload(), 50);
+  });
 }

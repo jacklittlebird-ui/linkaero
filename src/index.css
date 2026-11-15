@@ -333,3 +333,9 @@ main [role="tablist"] {
 .ops-scroll::-webkit-scrollbar-track { background: hsl(var(--muted)); }
 .ops-scroll::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.6); border-radius: 6px; }
 .ops-scroll thead th { position: sticky; top: 0; z-index: 1; background: hsl(var(--card)); }
+
+/* App-wide always-visible scrollbars pinned to the bottom of the window */
+.app-scroll { scrollbar-width: auto; scrollbar-color: hsl(var(--muted-foreground) / 0.6) hsl(var(--muted)); }
+.app-scroll::-webkit-scrollbar { height: 14px; width: 12px; }
+.app-scroll::-webkit-scrollbar-track { background: hsl(var(--muted)); }
+.app-scroll::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.6); border-radius: 7px; }

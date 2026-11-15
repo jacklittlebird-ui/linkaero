@@ -42,7 +42,7 @@ export default function Sidebar({ onNavigate, collapsed = false }: SidebarProps)
 
   return (
     <TooltipProvider delayDuration={0}>
-      <aside className={`${collapsed ? "w-14" : "w-56"} min-h-screen bg-sidebar flex flex-col shrink-0 transition-all duration-200 overflow-hidden`}>
+      <aside className={`${collapsed ? "w-14" : "w-56"} h-screen bg-sidebar flex flex-col shrink-0 transition-all duration-200 overflow-hidden`}>
         {/* Logo */}
         <div className="px-2 pt-3 pb-2">
           {collapsed ? (

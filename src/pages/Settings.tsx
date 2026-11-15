@@ -258,7 +258,7 @@ function SystemPreferencesTab() {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="en">English</SelectItem>
-                <SelectItem value="ar">العربية</SelectItem>
+                <SelectItem value="ar" data-no-translate>العربية</SelectItem>
               </SelectContent>
             </Select>
           </div>

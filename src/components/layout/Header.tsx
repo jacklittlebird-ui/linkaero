@@ -93,6 +93,7 @@ export default function Header({ onMenuClick, sidebarCollapsed, onToggleSidebar 
       <button
         onClick={() => { rememberLanguageChoice(user?.email); i18n.changeLanguage(i18n.language === "ar" ? "en" : "ar"); }}
         className="p-2 rounded-full hover:bg-muted transition-colors shrink-0 flex items-center gap-1"
+        data-no-translate
         title={i18n.language === "ar" ? "Switch to English" : "التبديل إلى العربية"}
       >
         <Languages size={18} className="text-muted-foreground" />
