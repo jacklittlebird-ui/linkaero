@@ -61,6 +61,7 @@ import NotesPayableLoansPage from "./pages/accounting/NotesPayableLoans";
 import ObjectionVariancePage from "./pages/accounting/ObjectionVariance";
 import FinancialStatementsPage from "./pages/accounting/FinancialStatements";
 import TreasuryVouchersPage from "./pages/accounting/TreasuryVouchers";
+import FlightCostReportPage from "./pages/accounting/FlightCostReport";
 import FinanceAuditLogPage from "./pages/accounting/AuditLog";
 import DepreciationSchedulerPage from "./pages/accounting/DepreciationScheduler";
 import AccrualsDeferralsPage from "./pages/accounting/AccrualsDeferrals";
@@ -253,6 +254,7 @@ function AppRoutes() {
       <Route path="/accounting/notes-payable" element={<ProtectedRoute><AppLayout><NotesPayableLoansPage /></AppLayout></ProtectedRoute>} />
       <Route path="/accounting/objections" element={<ProtectedRoute><AppLayout><ObjectionVariancePage /></AppLayout></ProtectedRoute>} />
       <Route path="/accounting/financial-statements" element={<ProtectedRoute><AppLayout><FinancialStatementsPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/accounting/flight-cost-report" element={<ProtectedRoute><AppLayout><FlightCostReportPage /></AppLayout></ProtectedRoute>} />
       <Route path="/accounting/treasury-vouchers" element={<ProtectedRoute><AppLayout><TreasuryVouchersPage /></AppLayout></ProtectedRoute>} />
       <Route path="/accounting/audit-log" element={<ProtectedRoute><AppLayout><FinanceAuditLogPage /></AppLayout></ProtectedRoute>} />
       <Route path="/accounting/depreciation" element={<ProtectedRoute><AppLayout><DepreciationSchedulerPage /></AppLayout></ProtectedRoute>} />

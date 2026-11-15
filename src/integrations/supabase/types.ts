@@ -12164,6 +12164,8 @@ export type Database = {
           expense_item: string | null
           finance_approved_at: string | null
           finance_approved_by: string | null
+          flight_date: string | null
+          flight_no: string | null
           flight_schedule_id: string | null
           id: string
           invoice_id: string | null
@@ -12194,6 +12196,7 @@ export type Database = {
           settlement_voucher_id: string | null
           station_id: string | null
           status: Database["public"]["Enums"]["voucher_status"]
+          supplier_account_id: string | null
           supplier_id: string | null
           updated_at: string
           vendor_invoice_id: string | null
@@ -12220,6 +12223,8 @@ export type Database = {
           expense_item?: string | null
           finance_approved_at?: string | null
           finance_approved_by?: string | null
+          flight_date?: string | null
+          flight_no?: string | null
           flight_schedule_id?: string | null
           id?: string
           invoice_id?: string | null
@@ -12250,6 +12255,7 @@ export type Database = {
           settlement_voucher_id?: string | null
           station_id?: string | null
           status?: Database["public"]["Enums"]["voucher_status"]
+          supplier_account_id?: string | null
           supplier_id?: string | null
           updated_at?: string
           vendor_invoice_id?: string | null
@@ -12276,6 +12282,8 @@ export type Database = {
           expense_item?: string | null
           finance_approved_at?: string | null
           finance_approved_by?: string | null
+          flight_date?: string | null
+          flight_no?: string | null
           flight_schedule_id?: string | null
           id?: string
           invoice_id?: string | null
@@ -12306,6 +12314,7 @@ export type Database = {
           settlement_voucher_id?: string | null
           station_id?: string | null
           status?: Database["public"]["Enums"]["voucher_status"]
+          supplier_account_id?: string | null
           supplier_id?: string | null
           updated_at?: string
           vendor_invoice_id?: string | null
@@ -12389,6 +12398,13 @@ export type Database = {
             columns: ["station_id"]
             isOneToOne: false
             referencedRelation: "finance_stations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treasury_vouchers_supplier_account_id_fkey"
+            columns: ["supplier_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
             referencedColumns: ["id"]
           },
           {
@@ -13770,6 +13786,8 @@ export type Database = {
           expense_item: string | null
           finance_approved_at: string | null
           finance_approved_by: string | null
+          flight_date: string | null
+          flight_no: string | null
           flight_schedule_id: string | null
           id: string
           invoice_id: string | null
@@ -13800,6 +13818,7 @@ export type Database = {
           settlement_voucher_id: string | null
           station_id: string | null
           status: Database["public"]["Enums"]["voucher_status"]
+          supplier_account_id: string | null
           supplier_id: string | null
           updated_at: string
           vendor_invoice_id: string | null
@@ -14138,6 +14157,8 @@ export type Database = {
           expense_item: string | null
           finance_approved_at: string | null
           finance_approved_by: string | null
+          flight_date: string | null
+          flight_no: string | null
           flight_schedule_id: string | null
           id: string
           invoice_id: string | null
@@ -14168,6 +14189,7 @@ export type Database = {
           settlement_voucher_id: string | null
           station_id: string | null
           status: Database["public"]["Enums"]["voucher_status"]
+          supplier_account_id: string | null
           supplier_id: string | null
           updated_at: string
           vendor_invoice_id: string | null
@@ -14331,6 +14353,8 @@ export type Database = {
           expense_item: string | null
           finance_approved_at: string | null
           finance_approved_by: string | null
+          flight_date: string | null
+          flight_no: string | null
           flight_schedule_id: string | null
           id: string
           invoice_id: string | null
@@ -14361,6 +14385,7 @@ export type Database = {
           settlement_voucher_id: string | null
           station_id: string | null
           status: Database["public"]["Enums"]["voucher_status"]
+          supplier_account_id: string | null
           supplier_id: string | null
           updated_at: string
           vendor_invoice_id: string | null
@@ -14396,6 +14421,8 @@ export type Database = {
           expense_item: string | null
           finance_approved_at: string | null
           finance_approved_by: string | null
+          flight_date: string | null
+          flight_no: string | null
           flight_schedule_id: string | null
           id: string
           invoice_id: string | null
@@ -14426,6 +14453,7 @@ export type Database = {
           settlement_voucher_id: string | null
           station_id: string | null
           status: Database["public"]["Enums"]["voucher_status"]
+          supplier_account_id: string | null
           supplier_id: string | null
           updated_at: string
           vendor_invoice_id: string | null

@@ -6,8 +6,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Info } from "lucide-react";
-import { computeDay, isPending, TVoucher } from "@/lib/treasuryBalance";
+import { Info, Printer, FileSpreadsheet, FileText } from "lucide-react";
+import { exportToExcel } from "@/lib/exportExcel";
+import { printRtlReport } from "@/lib/printTable";
+import { computeRange, isPending, TVoucher } from "@/lib/treasuryBalance";
 
 const fmt = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 2 });
 const toDMY = (iso: string) => iso.split("-").reverse().join("/");
@@ -21,8 +23,13 @@ const Heading = ({ children }: { children: React.ReactNode }) => (
 
 export default function TreasuryDailyBoard() {
   const today = new Date().toISOString().slice(0, 10);
-  const [dateText, setDateText] = useState(toDMY(today));
-  const date = fromDMY(dateText) ?? today;
+  const [fromText, setFromText] = useState(toDMY(today));
+  const [toText, setToText] = useState(toDMY(today));
+  const to = fromDMY(toText) ?? today;
+  const fromRaw = fromDMY(fromText) ?? to;
+  const from = fromRaw > to ? to : fromRaw;
+  const date = to;
+  const mask = (raw: string) => { const d = raw.replace(/\D/g, "").slice(0, 8); return [d.slice(0, 2), d.slice(2, 4), d.slice(4, 8)].filter(Boolean).join("/"); };
 
   const { data: vouchers = [] } = useQuery({
     queryKey: ["treasury_vouchers_board"],
@@ -42,13 +49,35 @@ export default function TreasuryDailyBoard() {
   const [cur, setCur] = useState<string | null>(null);
   const currency = cur ?? currencies[0];
 
-  const day = computeDay(vouchers, currency, date);
-  const ins = vouchers.filter((v) => v.currency === currency && v.voucher_date === date && v.voucher_type === "receipt" && ["approved", "posted", "settled"].includes(v.status));
-  const outs = vouchers.filter((v) => v.currency === currency && v.voucher_date === date && v.voucher_type !== "receipt" && !isPending(v) && ["approved", "posted", "settled"].includes(v.status));
+  const day = computeRange(vouchers, currency, from, to);
+  const inRange = (v: Row) => v.voucher_date >= from && v.voucher_date <= to;
+  const ins = vouchers.filter((v) => v.currency === currency && inRange(v) && v.voucher_type === "receipt" && ["approved", "posted", "settled"].includes(v.status));
+  const outs = vouchers.filter((v) => v.currency === currency && inRange(v) && v.voucher_type !== "receipt" && !isPending(v) && ["approved", "posted", "settled"].includes(v.status));
   const pendings = vouchers.filter((v) => v.currency === currency && isPending(v) && v.voucher_date <= date);
   const active = pendings.filter((v) => v.status !== "settled");
   const settled = pendings.filter((v) => v.status === "settled");
   const rows = Math.max(ins.length, outs.length, 1);
+
+  const statement = [...ins, ...outs].sort((a, b) => a.voucher_date.localeCompare(b.voucher_date) || a.voucher_no.localeCompare(b.voucher_no));
+  let run = day.opening;
+  const stRows = statement.map((v) => {
+    const isIn = v.voucher_type === "receipt"; const amt = Number(v.amount);
+    run += isIn ? amt : -amt;
+    return { date: toDMY(v.voucher_date), no: v.voucher_no, desc: v.description || v.party_name || "", inAmt: isIn ? amt : 0, outAmt: isIn ? 0 : amt, bal: run };
+  });
+  const period = `من ${toDMY(from)} إلى ${toDMY(to)} — ${currency}`;
+  const summary: [string, string][] = [["رصيد أول المدة", fmt(day.opening)], ["إجمالي وارد", fmt(day.receipts)], ["إجمالي منصرف", fmt(day.payments)], ["رصيد كاش", fmt(day.cash)], ["معلقات", fmt(day.pending)], ["الرصيد النهائي", fmt(day.final)]];
+  const head = ["التاريخ", "رقم الإذن", "البيان", "وارد", "منصرف", "الرصيد"];
+  const doPrint = () => printRtlReport({ title: "كشف حركة الخزينة", subtitle: period, summary, head,
+    body: [["", "", "رصيد أول المدة", "", "", fmt(day.opening)], ...stRows.map((r) => [r.date, r.no, r.desc, r.inAmt ? fmt(r.inAmt) : "", r.outAmt ? fmt(r.outAmt) : "", fmt(r.bal)])],
+    footer: ["", "", "الإجمالي", fmt(day.receipts), fmt(day.payments), fmt(day.cash)] });
+  const doExcel = () => exportToExcel([
+    { "التاريخ": "", "رقم الإذن": "", "البيان": "رصيد أول المدة", "وارد": "", "منصرف": "", "الرصيد": day.opening },
+    ...stRows.map((r) => ({ "التاريخ": r.date, "رقم الإذن": r.no, "البيان": r.desc, "وارد": r.inAmt || "", "منصرف": r.outAmt || "", "الرصيد": r.bal })),
+    { "التاريخ": "", "رقم الإذن": "", "البيان": "الإجمالي", "وارد": day.receipts, "منصرف": day.payments, "الرصيد": day.cash },
+    { "التاريخ": "", "رقم الإذن": "", "البيان": "معلقات", "وارد": "", "منصرف": "", "الرصيد": day.pending },
+    { "التاريخ": "", "رقم الإذن": "", "البيان": "الرصيد النهائي", "وارد": "", "منصرف": "", "الرصيد": day.final },
+  ], "Treasury", `treasury-statement-${currency}-${from}_${to}.xlsx`);
 
   const pill = (label: string, cls: string) => (
     <div className={`rounded-lg px-4 py-3 text-sm font-bold ${cls}`}>{label}</div>
@@ -73,8 +102,12 @@ export default function TreasuryDailyBoard() {
 
       <div className="flex flex-wrap items-end gap-4">
         <div>
-          <Label htmlFor="tb-date">تاريخ الكشف (DD/MM/YYYY)</Label>
-          <Input id="tb-date" value={dateText} maxLength={10} className="w-36" onChange={(e) => setDateText(e.target.value)} />
+          <Label htmlFor="tb-from">من تاريخ (DD/MM/YYYY)</Label>
+          <Input id="tb-from" value={fromText} maxLength={10} className="w-36" onChange={(e) => setFromText(mask(e.target.value))} />
+        </div>
+        <div>
+          <Label htmlFor="tb-to">إلى تاريخ (DD/MM/YYYY)</Label>
+          <Input id="tb-to" value={toText} maxLength={10} className="w-36" onChange={(e) => setToText(mask(e.target.value))} />
         </div>
         <div>
           <Label>العملة</Label>
@@ -85,7 +118,11 @@ export default function TreasuryDailyBoard() {
           </div>
         </div>
         <Button asChild variant="outline" size="sm"><Link to="/accounting/treasury-vouchers">إصدار إذن جديد</Link></Button>
+        <Button variant="outline" size="sm" onClick={doPrint}><Printer className="ms-1 h-4 w-4" />طباعة</Button>
+        <Button variant="outline" size="sm" onClick={doPrint}><FileText className="ms-1 h-4 w-4" />تصدير PDF</Button>
+        <Button variant="outline" size="sm" onClick={doExcel}><FileSpreadsheet className="ms-1 h-4 w-4" />تصدير Excel</Button>
       </div>
+      <p className="text-xs text-muted-foreground">تصدير PDF يفتح نافذة الطباعة — اختر «حفظ بصيغة PDF».</p>
 
       <Heading>معادلة الرصيد لكل عملة ({currency})</Heading>
       <div className="flex flex-wrap items-center gap-2 text-center">
@@ -100,7 +137,28 @@ export default function TreasuryDailyBoard() {
         <Info className="h-4 w-4" /> شيكات تحت التحصيل = رصيد منفصل تماماً — لا يدخل في معادلة الكاش أبداً
       </div>
 
-      <Heading>الكشف اليومي — T-Account (لكل عملة كشف مستقل)</Heading>
+      <Heading>كشف الحركة {period}</Heading>
+      <Card className="overflow-x-auto">
+        <CardContent className="p-0">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50"><tr>{head.map((h) => <th key={h} className="p-2 text-right">{h}</th>)}</tr></thead>
+            <tbody>
+              <tr className="border-t font-bold"><td className="p-2" colSpan={5}>رصيد أول المدة</td><td className="p-2">{fmt(day.opening)}</td></tr>
+              {stRows.map((r, i) => (
+                <tr key={i} className="border-t">
+                  <td className="p-2">{r.date}</td><td className="p-2">{r.no}</td><td className="p-2">{r.desc}</td>
+                  <td className="p-2 text-success">{r.inAmt ? fmt(r.inAmt) : ""}</td>
+                  <td className="p-2 text-destructive">{r.outAmt ? fmt(r.outAmt) : ""}</td>
+                  <td className="p-2">{fmt(r.bal)}</td>
+                </tr>
+              ))}
+              {stRows.length === 0 && <tr className="border-t"><td colSpan={6} className="p-3 text-center text-muted-foreground">لا توجد حركات في هذه الفترة</td></tr>}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+
+      <Heading>الكشف — T-Account (لكل عملة كشف مستقل)</Heading>
       <Card className="overflow-hidden">
         <CardContent className="p-0">
           <div className="grid grid-cols-2 text-sm font-bold">

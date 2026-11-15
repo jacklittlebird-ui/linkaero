@@ -27,6 +27,7 @@ const TREASURY_SECTION: NavSection = {
     { label: "Cash Accounts", path: "/treasury/cash-accounts" },
     { label: "Receipt Vouchers", path: "/accounting/treasury-vouchers?tab=receipt" },
     { label: "Payment Vouchers", path: "/accounting/treasury-vouchers?tab=general" },
+    { label: "Flight Cost Report", path: "/accounting/flight-cost-report" },
     { label: "Bank Transfers", path: "/treasury/bank-transfers" },
     { label: "Bank Reconciliation", path: "/treasury/bank-reconciliation" },
   ],
@@ -147,6 +148,7 @@ const channelNavs: Record<Channel, NavSection[]> = {
         { label: "Client Invoices", path: "/invoices" },
         { label: "Service Report", path: "/service-report" },
         { label: "Aging Reports", path: "/aging-reports" },
+        { label: "Flight Cost Report", path: "/accounting/flight-cost-report" },
       ],
     },
     

@@ -128,6 +128,9 @@ interface Voucher {
   station_id: string | null;
   airline_id: string | null;
   supplier_id: string | null;
+  supplier_account_id: string | null;
+  flight_no: string | null;
+  flight_date: string | null;
   service_type: string | null;
   flight_schedule_id: string | null;
   account_id: string | null;
@@ -145,6 +148,14 @@ interface Voucher {
 }
 
 interface Named { id: string; name: string; }
+const maskDMY = (raw: string) => {
+  const d = raw.replace(/\D/g, "").slice(0, 8);
+  return [d.slice(0, 2), d.slice(2, 4), d.slice(4, 8)].filter(Boolean).join("/");
+};
+const parseDMY = (s: string): string | null => {
+  const m = s?.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
+};
 interface AccountRow { id: string; account_name: string; currency: string; }
 interface GlAccount { id: string; code: string; name: string; name_ar: string | null; }
 
@@ -166,6 +177,9 @@ const emptyForm = (subtype: PaymentSubtype | null) => ({
   station_id: "",
   airline_id: "",
   supplier_id: "",
+  supplier_account_id: "",
+  flight_no: "",
+  flight_date: "",
   service_type: "",
   account_id: "",
   flight_schedule_id: "",
@@ -274,12 +288,13 @@ function VoucherLivePreview({ isReceipt, title, voucherNo, date, party, amount, 
 }
 
 function AccountPicker({
-  accounts, value, onChange, side,
+  accounts, value, onChange, side, label,
 }: {
   accounts: GlAccount[];
   value: string;
   onChange: (id: string) => void;
   side: "debit" | "credit";
+  label?: string;
 }) {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
@@ -289,9 +304,9 @@ function AccountPicker({
   return (
     <div className="col-span-2">
       <Label>
-        {side === "debit"
+        {label ?? (side === "debit"
           ? "البند المدين (الخزينة دائنة)"
-          : "البند الدائن (الخزينة مدينة)"}
+          : "البند الدائن (الخزينة مدينة)")}
       </Label>
       <Popover open={open} onOpenChange={(next) => { setOpen(next); if (next) setQ(""); }} modal>
         <PopoverTrigger asChild>
@@ -478,6 +493,9 @@ export default function TreasuryVouchersPage() {
     },
   });
 
+  // Suppliers = posting accounts under the chart's suppliers branch (codes 221…); new supplier accounts appear automatically.
+  const supplierAccounts = useMemo(() => glAccounts.filter((a) => a.code.startsWith("221")), [glAccounts]);
+
   const { data: banks = [] } = useQuery({
     queryKey: ["bank_accounts_min"],
     queryFn: async () => {
@@ -571,6 +589,11 @@ export default function TreasuryVouchersPage() {
       if (linesSum !== round2(form.amount))
         throw new Error(`إجمالي البنود (${num(linesSum)}) يجب أن يساوي إجمالي الخزينة (${num(form.amount)})`);
 
+      const flightIso = parseDMY(form.flight_date);
+      if (form.flight_date && !flightIso) throw new Error("تاريخ الرحلة يجب أن يكون بصيغة DD/MM/YYYY");
+      if (form.payment_subtype === "cost" && (form.lines ?? []).some((l) => glAccounts.find((a) => a.id === l.account_id)?.code?.startsWith("8"))
+        && (!form.flight_no.trim() || !flightIso))
+        throw new Error("رقم الرحلة وتاريخها إلزاميان للحسابات التي تبدأ بـ 8");
       if (form.movement_kind === "customer" && !form.party_name.trim())
         throw new Error("اكتب اسم العميل / Customer name is required");
       if (form.movement_kind === "customer" && !form.on_account && !form.invoice_id)
@@ -602,10 +625,13 @@ export default function TreasuryVouchersPage() {
         station_id: form.station_id || null,
         airline_id: form.airline_id || null,
         supplier_id: form.supplier_id || null,
+        supplier_account_id: form.supplier_account_id || null,
+        flight_no: form.flight_no.trim() || null,
+        flight_date: flightIso,
         service_type: form.service_type || null,
         account_id: (form.lines ?? [])[0]?.account_id || null,
         lines: form.lines?.map((l) => ({ account_id: l.account_id, amount: round2(l.amount), description: l.description || "" })),
-        flight_schedule_id: form.flight_schedule_id || null,
+        flight_schedule_id: null,
         notes: form.notes || null,
         movement_kind: form.movement_kind || null,
         invoice_id: !form.on_account && form.movement_kind === "customer" ? form.invoice_id || null : null,
@@ -813,6 +839,7 @@ export default function TreasuryVouchersPage() {
       if (val !== undefined && val !== null) next[k] = val;
     }
     next.manual_rate = Number(v.exchange_rate) || 0;
+    next.flight_date = v.flight_date ? v.flight_date.split("-").reverse().join("/") : "";
     const saved = (v as any).lines as VoucherLine[] | undefined;
     next.lines = saved && saved.length
       ? saved.map((l) => ({ account_id: l.account_id, amount: Number(l.amount), description: l.description || "" }))
@@ -1265,22 +1292,25 @@ export default function TreasuryVouchersPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label>مركز التكلفة 4 — المورد</Label>
-                  <Select value={form.supplier_id} onValueChange={(v) => setForm({ ...form, supplier_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="اختر المورد" /></SelectTrigger>
-                    <SelectContent>
-                      {suppliers.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <AccountPicker accounts={supplierAccounts} value={form.supplier_account_id} side="debit"
+                  label="مركز التكلفة 4 — المورد (من دليل الحسابات)"
+                  onChange={(id) => {
+                    const a = supplierAccounts.find((x) => x.id === id);
+                    setForm((f) => ({ ...f, supplier_account_id: id, party_type: f.party_type || "Supplier",
+                      party_name: f.party_name || (a ? a.name_ar || a.name : "") }));
+                  }} />
                 <div className="col-span-2 text-xs text-muted-foreground">
                   مركز التكلفة 2 (المحطة) محدد بالأعلى، والحساب المحاسبي يُختار بالأسفل.
                 </div>
-                <div className="col-span-2">
-                  <Label>رقم الرحلة (إلزامي للحسابات التي تبدأ بـ 8)</Label>
-                  <Input value={form.flight_schedule_id}
-                    onChange={(e) => setForm({ ...form, flight_schedule_id: e.target.value })} />
+                <div>
+                  <Label htmlFor="tv-flight-no">رقم الرحلة (إلزامي للحسابات التي تبدأ بـ 8)</Label>
+                  <Input id="tv-flight-no" value={form.flight_no}
+                    onChange={(e) => setForm({ ...form, flight_no: e.target.value.toUpperCase() })} />
+                </div>
+                <div>
+                  <Label htmlFor="tv-flight-date">تاريخ الرحلة (DD/MM/YYYY)</Label>
+                  <Input id="tv-flight-date" value={form.flight_date} maxLength={10} inputMode="numeric"
+                    onChange={(e) => setForm({ ...form, flight_date: maskDMY(e.target.value) })} />
                 </div>
               </>
             )}

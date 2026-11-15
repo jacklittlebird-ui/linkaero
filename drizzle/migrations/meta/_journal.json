@@ -155,6 +155,13 @@
       "when": 1794726822141,
       "tag": "0021_restrict_document_sequences_read",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1794727015218,
+      "tag": "0022_treasury_cost_flight_supplier",
+      "breakpoints": true
     }
   ]
 }

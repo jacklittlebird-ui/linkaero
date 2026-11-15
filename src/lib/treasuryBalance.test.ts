@@ -25,3 +25,17 @@ describe("treasury balance equation", () => {
     expect(r.pending).toBe(0);
   });
 });
+
+import { computeRange } from "./treasuryBalance";
+import { monthBounds } from "./flightCostReport";
+describe("treasury range statement", () => {
+  const v = (t: "receipt" | "payment", d: string, a: number) => ({ voucher_type: t, payment_subtype: t === "receipt" ? null : "general", status: "posted", currency: "EGP", amount: a, voucher_date: d });
+  it("opening counts movements before from; range sums inside from..to", () => {
+    const r = computeRange([v("receipt", "2026-11-01", 1000), v("payment", "2026-11-05", 200), v("receipt", "2026-11-10", 50), v("payment", "2026-11-20", 99)], "EGP", "2026-11-05", "2026-11-10");
+    expect(r).toMatchObject({ opening: 1000, receipts: 50, payments: 200, cash: 850 });
+  });
+  it("monthBounds gives full month", () => {
+    expect(monthBounds("02/2028")).toEqual({ from: "2028-02-01", to: "2028-02-29" });
+    expect(monthBounds("13/2026")).toBeNull();
+  });
+});
