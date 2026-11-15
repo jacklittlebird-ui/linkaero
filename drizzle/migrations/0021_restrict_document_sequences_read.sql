@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS document_sequences_read ON public.document_sequences;
+CREATE POLICY document_sequences_read ON public.document_sequences FOR SELECT TO authenticated USING (public.is_admin(auth.uid()));

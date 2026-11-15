@@ -148,6 +148,13 @@
       "when": 1794304941302,
       "tag": "0020_treasury_voucher_multi_lines",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1794726822141,
+      "tag": "0021_restrict_document_sequences_read",
+      "breakpoints": true
     }
   ]
 }
