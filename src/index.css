@@ -339,3 +339,13 @@ main [role="tablist"] {
 .app-scroll::-webkit-scrollbar { height: 14px; width: 12px; }
 .app-scroll::-webkit-scrollbar-track { background: hsl(var(--muted)); }
 .app-scroll::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.6); border-radius: 7px; }
+
+/* Unified page scrollbar: wide tables no longer scroll inside their own box;
+   the whole work area scrolls together with one bar pinned to the window bottom. */
+main.app-scroll .overflow-x-auto,
+main.app-scroll .overflow-auto,
+main.app-scroll .ops-scroll,
+main.app-scroll .overflow-hidden:has(table) {
+  overflow: visible !important;
+  max-height: none !important;
+}
