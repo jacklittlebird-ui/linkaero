@@ -345,6 +345,10 @@ main [role="tablist"] {
    On narrow screens (phones) this is reversed: tables scroll inside their own box
    again so the page never becomes wider than the screen and cards stay full width. */
 @media (min-width: 768px) {
+  .app-workspace {
+    width: max-content;
+    min-width: 100%;
+  }
   main.app-scroll .overflow-x-auto,
   main.app-scroll .overflow-auto,
   main.app-scroll .ops-scroll,
@@ -356,6 +360,10 @@ main [role="tablist"] {
 
 /* Narrow screens: keep wide tables inside their own scrollable box. */
 @media (max-width: 767px) {
+  .app-workspace {
+    width: 100%;
+    min-width: 0;
+  }
   main.app-scroll .overflow-x-auto,
   main.app-scroll .overflow-auto,
   main.app-scroll .ops-scroll {

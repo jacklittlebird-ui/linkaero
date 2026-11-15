@@ -2107,7 +2107,7 @@ export default function ServiceReportPage() {
     return "security";
   })();
   return (
-    <div className="p-6 space-y-4">
+    <div className="space-y-4">
       <Tabs defaultValue={initialTab} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="security" className="gap-1.5">

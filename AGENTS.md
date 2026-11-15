@@ -1,4 +1,5 @@
 # Architecture rules
+- AppLayout's workspace owns desktop intrinsic content width so headers, statistics and wide tables scroll together; mobile keeps viewport width and local table scrolling to prevent clipping.
 - Cash-box options are configured records linked to exact posting accounts in the chart, never chart IDs passed as cash-box IDs; this preserves voucher foreign keys and ledger linkage.
 - Treasury entry uses paginated posting-account loading and normalized Arabic/code search; this prevents API row caps and spelling variants hiding chart accounts.
 - Treasury voucher numbers are reserved atomically for the authenticated user when opening the form and consumed by the insert trigger, with insert-time numbering for legacy clients; CBE side rates are enforced server-side without altering unchanged historical vouchers.
