@@ -8,3 +8,4 @@
 - Income statement sections are classified by account code in src/lib/incomeStatement.ts; one place to adjust the revenue/cost/station/admin/other split.
 - Treasury Vouchers are the single entry point for all cash/bank receipts and payments (Treasury nav links point there); bank-to-cash cheques go through the Cash in Transit account (code 120130001) as two vouchers, so cash only increases when the cashier receives it and nothing is double-posted.
 - Treasury cost-voucher suppliers come from chart posting accounts under code 221 (supplier_account_id), and flight cost reporting reads treasury_vouchers.flight_no/flight_date; new supplier accounts appear without extra setup.
+- Treasury range statements and monthly flight-cost reports load all matching vouchers in ordered pages and refresh after voucher changes; this prevents API row limits and cached reports hiding financial movements.

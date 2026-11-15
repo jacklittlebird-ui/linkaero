@@ -10,6 +10,7 @@ import { Info, Printer, FileSpreadsheet, FileText } from "lucide-react";
 import { exportToExcel } from "@/lib/exportExcel";
 import { printRtlReport } from "@/lib/printTable";
 import { computeRange, isPending, TVoucher } from "@/lib/treasuryBalance";
+import { useAuth } from "@/contexts/AuthContext";
 
 const fmt = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 2 });
 const toDMY = (iso: string) => iso.split("-").reverse().join("/");
@@ -22,6 +23,7 @@ const Heading = ({ children }: { children: React.ReactNode }) => (
 );
 
 export default function TreasuryDailyBoard() {
+  const { session } = useAuth();
   const today = new Date().toISOString().slice(0, 10);
   const [fromText, setFromText] = useState(toDMY(today));
   const [toText, setToText] = useState(toDMY(today));
@@ -31,14 +33,20 @@ export default function TreasuryDailyBoard() {
   const date = to;
   const mask = (raw: string) => { const d = raw.replace(/\D/g, "").slice(0, 8); return [d.slice(0, 2), d.slice(2, 4), d.slice(4, 8)].filter(Boolean).join("/"); };
 
-  const { data: vouchers = [] } = useQuery({
+  const { data: vouchers = [], isLoading, error } = useQuery({
     queryKey: ["treasury_vouchers_board"],
+    enabled: !!session,
     queryFn: async () => {
+      const result: Row[] = [];
+      for (let offset = 0; ; offset += 1000) {
       const { data, error } = await supabase.from("treasury_vouchers")
         .select("id,voucher_no,voucher_type,payment_subtype,status,currency,amount,voucher_date,description,party_name,settled_amount")
-        .neq("status", "void").limit(10000);
+        .neq("status", "void").order("voucher_date").order("id").range(offset, offset + 999);
       if (error) throw error;
-      return (data ?? []) as unknown as Row[];
+      result.push(...(data ?? []) as unknown as Row[]);
+      if (!data || data.length < 1000) break;
+      }
+      return result;
     },
   });
 
@@ -118,10 +126,11 @@ export default function TreasuryDailyBoard() {
           </div>
         </div>
         <Button asChild variant="outline" size="sm"><Link to="/accounting/treasury-vouchers">إصدار إذن جديد</Link></Button>
-        <Button variant="outline" size="sm" onClick={doPrint}><Printer className="ms-1 h-4 w-4" />طباعة</Button>
-        <Button variant="outline" size="sm" onClick={doPrint}><FileText className="ms-1 h-4 w-4" />تصدير PDF</Button>
-        <Button variant="outline" size="sm" onClick={doExcel}><FileSpreadsheet className="ms-1 h-4 w-4" />تصدير Excel</Button>
+        <Button variant="outline" size="sm" onClick={doPrint} disabled={isLoading || !!error}><Printer className="ms-1 h-4 w-4" />طباعة</Button>
+        <Button variant="outline" size="sm" onClick={doPrint} disabled={isLoading || !!error}><FileText className="ms-1 h-4 w-4" />تصدير PDF</Button>
+        <Button variant="outline" size="sm" onClick={doExcel} disabled={isLoading || !!error}><FileSpreadsheet className="ms-1 h-4 w-4" />تصدير Excel</Button>
       </div>
+      {error && <p role="alert" className="text-destructive">تعذر تحميل كشف حركة الخزينة؛ أعد المحاولة.</p>}
       <p className="text-xs text-muted-foreground">تصدير PDF يفتح نافذة الطباعة — اختر «حفظ بصيغة PDF».</p>
 
       <Heading>معادلة الرصيد لكل عملة ({currency})</Heading>

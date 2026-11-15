@@ -310,8 +310,8 @@ function AccountPicker({
       </Label>
       <Popover open={open} onOpenChange={(next) => { setOpen(next); if (next) setQ(""); }} modal>
         <PopoverTrigger asChild>
-          <Button variant="outline" role="combobox" aria-expanded={open} aria-label="Select chart account"
-            className="w-full justify-between h-auto min-h-10 text-start font-normal">
+          <Button variant="outline" role="combobox" aria-expanded={open}
+            className="w-full justify-between h-auto min-h-10 text-start font-normal" aria-label={label ?? (side === "debit" ? "البند المدين" : "البند الدائن")}>
             <span className="min-w-0 whitespace-normal">{selected ? `${selected.code} — ${selected.name_ar || selected.name}` : "اختر الحساب"}</span>
             <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0" />
           </Button>
@@ -480,6 +480,8 @@ export default function TreasuryVouchersPage() {
 
   const { data: glAccounts = [] } = useQuery({
     queryKey: ["coa_min_treasury"],
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const accounts: GlAccount[] = [];
       for (let offset = 0; ; offset += 1000) {
@@ -655,6 +657,8 @@ export default function TreasuryVouchersPage() {
       qc.invalidateQueries({ queryKey: ["treasury_vouchers"] });
       qc.invalidateQueries({ queryKey: ["v_treasury_balances"] });
       setDialogOpen(false);
+      qc.invalidateQueries({ queryKey: ["treasury_vouchers_board"] });
+      qc.invalidateQueries({ queryKey: ["flight_cost_report"] });
       toast.success(editing ? `تم تعديل السند / Voucher updated: ${saved.voucher_no}` : `تم إنشاء السند / Voucher created: ${saved.voucher_no}`);
       setEditing(null);
     },
@@ -672,6 +676,8 @@ export default function TreasuryVouchersPage() {
       qc.invalidateQueries({ queryKey: ["treasury_vouchers"] });
       qc.invalidateQueries({ queryKey: ["v_treasury_balances"] });
       toast.success(`Voucher ${STATUS_LABEL[v.to].toLowerCase()}`);
+      qc.invalidateQueries({ queryKey: ["treasury_vouchers_board"] });
+      qc.invalidateQueries({ queryKey: ["flight_cost_report"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });

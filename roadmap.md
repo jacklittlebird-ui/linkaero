@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Verify cost-voucher supplier picker (434 chart accounts) and flight number/date inputs; no financial test voucher saved
+- [x] Verify treasury period statement against existing movements, Excel download and PDF print with logo; monthly report loads, persisted flight-cost readback not tested
 - [x] Restore cash-box selection: 11 cash boxes configured with exact chart links; EGP selection verified in authenticated UI without financial test entries
 - [x] Automatic treasury voucher numbers and easier account search (Arabic spelling normalization, code search, complete paginated account list)
 - [x] Audit current-account entries and chart completeness: all 1,503 codes in the 2025 chart are present; database has two additional cash-in-transit accounts

@@ -9,6 +9,7 @@ import { Printer, FileSpreadsheet, FileText } from "lucide-react";
 import { exportToExcel } from "@/lib/exportExcel";
 import { printRtlReport } from "@/lib/printTable";
 import { monthBounds } from "@/lib/flightCostReport";
+import { useAuth } from "@/contexts/AuthContext";
 
 const fmt = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const dmy = (iso: string | null) => (iso ? iso.split("-").reverse().join("/") : "");
@@ -21,6 +22,7 @@ interface Row {
 
 /** Monthly report for Collections: every treasury cost payment linked to a flight. */
 export default function FlightCostReportPage() {
+  const { session } = useAuth();
   const now = new Date();
   const [month, setMonth] = useState(`${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`);
   const bounds = monthBounds(month);
@@ -30,17 +32,23 @@ export default function FlightCostReportPage() {
     queryFn: async () => (await supabase.from("airlines").select("id,name").order("name")).data ?? [],
   });
 
-  const { data: rows = [], isLoading } = useQuery({
+  const { data: rows = [], isLoading, error } = useQuery({
     queryKey: ["flight_cost_report", bounds?.from, bounds?.to],
-    enabled: !!bounds,
+    enabled: !!session && !!bounds,
     queryFn: async () => {
-      const { data, error } = await (supabase.from as any)("treasury_vouchers")
+      if (!bounds) return [];
+      const result: Row[] = [];
+      for (let offset = 0; ; offset += 1000) {
+      const { data, error } = await supabase.from("treasury_vouchers")
         .select("id,voucher_no,voucher_date,flight_no,flight_date,description,party_name,currency,amount,base_amount,status,airline_id,service_type")
         .eq("payment_subtype", "cost").not("flight_no", "is", null).neq("status", "void")
-        .gte("flight_date", bounds!.from).lte("flight_date", bounds!.to)
-        .order("flight_date").order("flight_no");
+        .gte("flight_date", bounds.from).lte("flight_date", bounds.to)
+        .order("flight_date").order("flight_no").order("id").range(offset, offset + 999);
       if (error) throw error;
-      return (data ?? []) as Row[];
+      result.push(...(data ?? []) as Row[]);
+      if (!data || data.length < 1000) break;
+      }
+      return result;
     },
   });
 
@@ -71,10 +79,11 @@ export default function FlightCostReportPage() {
           <Input id="fc-month" className="w-32" maxLength={7} value={month}
             onChange={(e) => { const d = e.target.value.replace(/\D/g, "").slice(0, 6); setMonth(d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d); }} />
         </div>
-        <Button variant="outline" size="sm" onClick={doPrint}><Printer className="ms-1 h-4 w-4" />طباعة</Button>
-        <Button variant="outline" size="sm" onClick={doPrint}><FileText className="ms-1 h-4 w-4" />تصدير PDF</Button>
+        <Button variant="outline" size="sm" onClick={doPrint} disabled={!bounds || isLoading || !!error}><Printer className="ms-1 h-4 w-4" />طباعة</Button>
+        <Button variant="outline" size="sm" onClick={doPrint} disabled={!bounds || isLoading || !!error}><FileText className="ms-1 h-4 w-4" />تصدير PDF</Button>
         <Button variant="outline" size="sm" onClick={doExcel} disabled={!rows.length}><FileSpreadsheet className="ms-1 h-4 w-4" />تصدير Excel</Button>
       </div>
+      {error && <p role="alert" className="text-destructive">تعذر تحميل تقرير تكاليف الرحلات؛ أعد المحاولة.</p>}
       <div className="grid gap-3 sm:grid-cols-3">
         {summary.map(([k, v]) => <Card key={k}><CardContent className="p-4 text-center"><div className="text-xs text-muted-foreground">{k}</div><div className="text-lg font-bold">{v}</div></CardContent></Card>)}
       </div>
