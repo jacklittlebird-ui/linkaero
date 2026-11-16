@@ -520,7 +520,7 @@ export default function SecurityTaskSheetDialog({ row, onClose, onSave, registra
   const currentAirlineName = String((currentRow as any)?.airline || (currentRow as any)?.airline_name || "").trim();
   const isEthiopianAirline = isEthiopianAirlineName(currentAirlineName);
   const isAirFrance = isAirFranceAirline(currentAirlineName);
-  const singleActualTime = /air\s*cairo|nesma/i.test(String(currentAirlineName || ""));
+  const singleActualTime = /air\s*cairo|nesma|fly\s*plus/i.test(String(currentAirlineName || ""));
   const actualLabel = singleActualTime ? "00:00" : "00:00/00:00";
   const fmtActual = (v: string, prev: string) => singleActualTime ? formatTimeInput(v, prev) : formatDualTimeInput(v, prev);
   const flightTypeOptions = isEthiopianAirline ? ETHIOPIAN_FLIGHT_TYPES : FLIGHT_TYPES;
@@ -530,7 +530,7 @@ export default function SecurityTaskSheetDialog({ row, onClose, onSave, registra
   const ethiopianMissingFlightType = isEthiopianAirline && !ETHIOPIAN_FLIGHT_TYPES.includes(sheet.flight_type as any);
   const dialogAirlineTitle = isNew
     ? "New"
-    : /airlines/i.test(currentAirlineName)
+    : /airlines|fly\s*plus/i.test(currentAirlineName)
       ? currentAirlineName
       : `${currentAirlineName} Airlines`;
   const supervisorTitle = isEthiopianAirline
@@ -896,7 +896,7 @@ export default function SecurityTaskSheetDialog({ row, onClose, onSave, registra
     const airlineName = pick(matchedAirline?.name, baseRow.airline, dbFlight?.handling_agent) || "—";
     const printIsEthiopian = isEthiopianAirlineName(airlineName);
     const printIsAirFrance = isAirFranceAirline(airlineName);
-    const airlineHeader = /airlines/i.test(airlineName) ? airlineName : `${airlineName} Airlines`;
+    const airlineHeader = /airlines|fly\s*plus/i.test(airlineName) ? airlineName : `${airlineName} Airlines`;
     const printFlightTypeOptions = printIsEthiopian ? ETHIOPIAN_FLIGHT_TYPES : FLIGHT_TYPES;
     const flightNoVal = pick(v.flight_no, dbFlight?.flight_no, baseRow.flight_no) || "—";
     // Ethiopian: the DATE field is persisted in DEP DATE (departure_date) —
