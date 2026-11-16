@@ -1811,8 +1811,8 @@ export default function InvoicesPage() {
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Airline</label>
                   <select className={selectCls} value={monthlyAirlineOperator} onChange={e => setMonthlyAirlineOperator(e.target.value)}>
                     <option value="Air Cairo">Air Cairo</option>
-                    <option value="Fly Plus">Fly Plus</option>
-                    {allOperators.filter(o => o !== "Air Cairo" && o !== "Fly Plus").map(o => <option key={o} value={o}>{o}</option>)}
+                    <option value="FlyPlus">FlyPlus</option>
+                    {allOperators.filter(o => o !== "Air Cairo" && o !== "FlyPlus").map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
                 </div>
                 <div>
