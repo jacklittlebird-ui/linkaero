@@ -273,7 +273,7 @@ export default function OperationsReportsPage() {
   const airlineOptions = useMemo(() => {
     const a = uniqSorted(serviceReports, (r: any) => r.operator);
     const b = uniqSorted(dispatches, (r: any) => r.airline);
-    return Array.from(new Set([...a, ...b])).sort();
+    return Array.from(new Set(["FlyPlus", ...a, ...b])).sort();
   }, [serviceReports, dispatches]);
 
   const inDateRange = (d: string | null | undefined) => {

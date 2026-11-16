@@ -168,7 +168,7 @@ export default function FlightSchedulePage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const airlines = useMemo(() => [...new Set(data.map(d => d.airline))].sort(), [data]);
+  const airlines = useMemo(() => [...new Set(["FlyPlus", ...data.map(d => d.airline)])].filter(Boolean).sort(), [data]);
   const flightTypes = useMemo(() => [...new Set(data.map(d => d.flight_type).filter(Boolean))], [data]);
 
   const filtered = useMemo(() => {

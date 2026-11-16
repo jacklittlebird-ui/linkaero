@@ -1158,7 +1158,7 @@ function HandlingServiceReportContent() {
     return [...set].sort();
   }, [mergedRows, dbAirportsList]);
   const allHandlingTypes = useMemo(() => [...new Set(mergedRows.filter(r => r.handlingType).map(r => r.handlingType))], [mergedRows]);
-  const allOperators = useMemo(() => [...new Set(mergedRows.filter(r => r.operator).map(r => r.operator))].sort(), [mergedRows]);
+  const allOperators = useMemo(() => [...new Set(["FlyPlus", ...mergedRows.filter(r => r.operator).map(r => r.operator)])].sort(), [mergedRows]);
 
   const rejectedCount = useMemo(
     () => mergedRows.filter(r => r.isLinked && r.reviewStatus === "rejected").length,

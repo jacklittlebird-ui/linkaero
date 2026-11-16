@@ -1018,7 +1018,7 @@ export default function SecurityServiceReportsPage() {
   }, [dispatches, dbAirports]);
   const allServiceTypes = useMemo(() => [...new Set(dispatches.map(d => d.service_type))].sort(), [dispatches]);
   const allAirlines = useMemo(() => {
-    const set = new Set<string>();
+    const set = new Set<string>(["FlyPlus"]);
     dispatches.forEach(r => { if (r.airline) set.add(r.airline); });
     securityFlights.forEach((f: any) => {
       const name = f.airlines?.name || f.handling_agent;

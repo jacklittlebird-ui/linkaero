@@ -316,7 +316,7 @@ export default function InvoicesPage() {
     }
   }, [location.search]);
 
-  const operators = useMemo(() => [...new Set(invoices.map(i => i.operator).filter(Boolean))].sort(), [invoices]);
+  const operators = useMemo(() => [...new Set(["FlyPlus", ...invoices.map(i => i.operator).filter(Boolean)])].sort(), [invoices]);
 
   const filtered = useMemo(() => {
     let r = invoices;
