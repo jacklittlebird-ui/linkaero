@@ -959,7 +959,7 @@ export default function SecurityTaskSheetDialog({ row, onClose, onSave, registra
     const printSupervisorTitle = printIsEthiopian
       ? "ETHIOPIAN AIRLINES (DUTY MANAGER)"
       : `${String(airlineName).toUpperCase()} (SECURITY SUPERVISOR ON-DUTY)`;
-    const printVersion = printIsEthiopian ? "V.05 22Jan2023" : "V.03 22Jan2023";
+    const printVersion = printIsEthiopian ? "V.05 22Jan2023" : /fly\s*plus/i.test(airlineName) ? "V.01 01Nov2026" : "V.03 22Jan2023";
 
     const obsSection = (title: string, rows: [string, string][]) => {
       const rowsHtml = rows.map(([label, val]) =>
@@ -1853,7 +1853,7 @@ ${accompaniedHtml}
           {/* Footer matching the PDF */}
           <div className="flex justify-between items-center text-[11px] text-muted-foreground pt-3 border-t">
             <span className="flex items-center gap-1.5"><Shield size={12} /> {currentRow.airline} Security Task Sheet</span>
-            <span className="font-mono">{isAirFrance ? "V.06 07Aug2024" : `${isEthiopianAirline ? "V.05" : "V.03"} 22Jan2023`}</span>
+            <span className="font-mono">{isAirFrance ? "V.06 07Aug2024" : isEthiopianAirline ? "V.05 22Jan2023" : /fly\s*plus/i.test(String(currentAirlineName || "")) ? "V.01 01Nov2026" : "V.03 22Jan2023"}</span>
           </div>
         </div>
 
