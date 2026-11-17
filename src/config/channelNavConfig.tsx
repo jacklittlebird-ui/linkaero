@@ -25,6 +25,7 @@ const TREASURY_SECTION: NavSection = {
     { label: "Treasury Overview", path: "/treasury" },
     { label: "Bank Accounts", path: "/treasury/bank-accounts" },
     { label: "Cash Accounts", path: "/treasury/cash-accounts" },
+    { label: "Treasury Vouchers", path: "/accounting/treasury-vouchers" },
     { label: "Receipt Vouchers", path: "/accounting/treasury-vouchers?tab=receipt" },
     { label: "Payment Vouchers", path: "/accounting/treasury-vouchers?tab=general" },
     { label: "Flight Cost Report", path: "/accounting/flight-cost-report" },
