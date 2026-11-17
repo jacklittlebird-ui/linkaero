@@ -135,31 +135,45 @@ export default function JournalEntriesPage() {
   const { user } = useAuth();
   const isGeneral = entryKind === "general";
   const { data: cbeQuote, isFetching: cbeLoading } = useQuery({
-    queryKey: ["je_cbe_quote", entryCurrency, form.entry_date],
-    enabled: dialogOpen && !!user && isGeneral && entryCurrency !== "EGP",
+    queryKey: ["je_cbe_quotes", form.entry_date],
+    enabled: dialogOpen && !!user && isGeneral,
     queryFn: async () => {
       await supabase.functions.invoke("sync-cbe-rates").catch(() => null);
-      const { data, error } = await supabase.rpc("treasury_cbe_quote" as any, { _currency: entryCurrency, _date: form.entry_date });
-      if (error) throw error;
-      return data as { buy_rate: number; sell_rate: number; rate_date: string } | null;
+      const out: Record<string, { buy_rate: number; sell_rate: number; rate_date: string } | null> = {};
+      await Promise.all(CURRENCIES.filter(c => c !== "EGP").map(async c => {
+        const { data } = await supabase.rpc("treasury_cbe_quote" as any, { _currency: c, _date: form.entry_date });
+        out[c] = (data as any) || null;
+      }));
+      return out;
     },
   });
+  const lineRate = (l: any) => (l.transaction_currency || "EGP") === "EGP" ? 1 : (Number(l.exchange_rate) || 0);
   useEffect(() => {
-    if (entryCurrency === "EGP") { setEntryRate(1); return; }
-    if (!rateManual && cbeQuote?.buy_rate) setEntryRate(Number(cbeQuote.buy_rate));
-  }, [cbeQuote, entryCurrency, rateManual]);
+    if (!isGeneral || !cbeQuote) return;
+    setLines(ls => {
+      let changed = false;
+      const next = ls.map((l: any) => {
+        const cur = l.transaction_currency || "EGP";
+        if (l.rate_manual) return l;
+        const r = cur === "EGP" ? 1 : Number(cbeQuote[cur]?.buy_rate) || 0;
+        if (Number(l.exchange_rate) === r) return l;
+        changed = true; return { ...l, exchange_rate: r };
+      });
+      return changed ? next : ls;
+    });
+  }, [cbeQuote, isGeneral, lines]);
   const saveTimerRef = useState<{ current: SaveTimer | null }>(() => ({ current: null }))[0];
 
   // Load lines for edit
   const loadLines = async (entryId: string) => {
     const { data } = await supabase.from("journal_entry_lines" as any).select("*").eq("entry_id", entryId).order("sort_order");
     const rows = (data as unknown as JournalLine[]) || [];
-    const cur = rows.find(r => r.transaction_currency && r.transaction_currency !== "EGP");
-    if (cur && Number(cur.exchange_rate) > 0) {
-      const r = Number(cur.exchange_rate);
-      setEntryCurrency(cur.transaction_currency!); setEntryRate(r); setRateManual(true);
-      rows.forEach(l => { l.debit = +(Number(l.debit || 0) / r).toFixed(2); l.credit = +(Number(l.credit || 0) / r).toFixed(2); });
-    }
+    rows.forEach((l: any) => {
+      const r = Number(l.exchange_rate);
+      if (l.transaction_currency && l.transaction_currency !== "EGP" && r > 0) {
+        l.debit = +(Number(l.debit || 0) / r).toFixed(2); l.credit = +(Number(l.credit || 0) / r).toFixed(2); l.rate_manual = true;
+      }
+    });
     setLines((data as unknown as JournalLine[])?.length ? (data as unknown as JournalLine[]) : [{ account_id: "", debit: 0, credit: 0, description: "" }]);
   };
 
@@ -179,8 +193,8 @@ export default function JournalEntriesPage() {
   });
   const pag = usePagination(filtered, { resetKey: `${search}|${statusFilter}|${refTypeFilter}|${createdByFilter}|${dateFrom}|${dateTo}|${minAmount}` });
 
-  const totalDebit = lines.reduce((s, l) => s + (Number(l.debit) || 0), 0);
-  const totalCredit = lines.reduce((s, l) => s + (Number(l.credit) || 0), 0);
+  const totalDebit = +lines.reduce((s, l) => s + (Number(l.debit) || 0) * (isGeneral ? lineRate(l) : 1), 0).toFixed(2);
+  const totalCredit = +lines.reduce((s, l) => s + (Number(l.credit) || 0) * (isGeneral ? lineRate(l) : 1), 0).toFixed(2);
   const isBalanced = Math.abs(totalDebit - totalCredit) < 0.01;
   const missingFlightLink = lines.some(l => {
     if (!l.account_id) return false;
@@ -216,7 +230,8 @@ export default function JournalEntriesPage() {
 
   const buildLinePayload = (l: Partial<JournalLine>, i: number, entryId: string) => {
     if (isGeneral) {
-      const r = entryCurrency === "EGP" ? 1 : entryRate;
+      const cur = l.transaction_currency || "EGP";
+      const r = lineRate(l);
       const d = Number(l.debit) || 0, c = Number(l.credit) || 0;
       return {
         entry_id: entryId, account_id: l.account_id,
@@ -224,8 +239,8 @@ export default function JournalEntriesPage() {
         description: l.description || "", sort_order: i,
         company_id: l.company_id || null, station_id: null, service_type: null,
         airline_id: null, supplier_id: null, flight_schedule_id: null,
-        transaction_currency: entryCurrency, transaction_amount: d || c,
-        exchange_rate: r, base_amount: +((d || c) * r).toFixed(2),
+        transaction_currency: cur, transaction_amount: d || c,
+        exchange_rate: r, exchange_rate_date: form.entry_date, base_currency: "EGP", base_amount: +((d || c) * r).toFixed(2),
       };
     }
     return {
@@ -253,7 +268,7 @@ export default function JournalEntriesPage() {
       const timer = saveTimerRef.current ?? startSaveTimer("JournalEntry");
       saveTimerRef.current = timer;
       if (!entryKind) throw new Error("اختر نوع القيد (عام / تكاليف)");
-      if (isGeneral && entryCurrency !== "EGP" && !(entryRate > 0)) throw new Error("سعر الصرف غير متاح — أدخله يدوياً");
+      if (isGeneral && lines.some(l => l.account_id && !(lineRate(l) > 0))) throw new Error("سعر الصرف غير متاح لأحد البنود — أدخله يدوياً");
       if (!form.entry_no || !isBalanced) throw new Error("Entry must be balanced");
       const validLines = lines.filter(l => l.account_id && ((Number(l.debit) || 0) + (Number(l.credit) || 0) > 0));
       if (validLines.length < 2) throw new Error("At least 2 lines required");
@@ -394,12 +409,8 @@ export default function JournalEntriesPage() {
                     </Select>
                   </div>
                   {isGeneral ? (
-                  <div>
-                    <label className="text-xs text-slate-600 mb-1 block">العملة</label>
-                    <Select value={entryCurrency} onValueChange={v => { setEntryCurrency(v); setRateManual(false); }}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                    </Select>
+                  <div className="text-xs text-slate-600 self-center">
+                    العملة وسعر الصرف تُحدد لكل بند — السعر من البنك المركزي (شراء){cbeLoading ? " · جاري الجلب…" : ""}
                   </div>
                   ) : (
                   <div className={entryKind !== "cost" || !stations.some((s: any) => s.company_id === lines[0]?.company_id) ? "pointer-events-none opacity-50 " : ""}>
@@ -412,22 +423,6 @@ export default function JournalEntriesPage() {
                     <DateInput  value={form.entry_date} onChange={e => setForm({ ...form, entry_date: e.target.value })} className="bg-slate-50" />
                   </div>
                 </div>
-
-                {isGeneral && entryCurrency !== "EGP" && (
-                  <div className="rounded-md border border-amber-200 bg-amber-50 p-3 grid grid-cols-12 gap-3 items-end">
-                    <div className="col-span-4">
-                      <label className="text-xs text-slate-600 mb-1 block">سعر الصرف (البنك المركزي — شراء) {cbeQuote?.rate_date ? `· ${cbeQuote.rate_date}` : ""}</label>
-                      <Input type="number" step="0.0001" value={entryRate || ""} readOnly={!rateManual} className={rateManual ? "" : "bg-slate-100"} onChange={e => setEntryRate(Number(e.target.value))} />
-                    </div>
-                    <label className="col-span-5 flex items-center gap-2 text-xs text-slate-700">
-                      <input type="checkbox" checked={rateManual} onChange={e => setRateManual(e.target.checked)} />
-                      إيقاف الربط وإدخال السعر يدوياً
-                    </label>
-                    <div className="col-span-3 text-xs text-slate-700">
-                      {cbeLoading ? "جاري جلب السعر…" : !rateManual && !cbeQuote ? <span className="text-red-600">السعر غير متاح</span> : <>المعادل بالجنيه: <b>{(totalDebit * entryRate).toLocaleString(undefined, { maximumFractionDigits: 2 })}</b></>}
-                    </div>
-                  </div>
-                )}
 
                 {/* Description */}
                 <div>
@@ -444,7 +439,7 @@ export default function JournalEntriesPage() {
                       <div key={i} className="rounded-lg border border-slate-200 bg-slate-50/60 p-3 space-y-3">
                         {/* Row 1: Account + Service Type */}
                         <div className="grid grid-cols-12 gap-3 items-end">
-                          <div className={isGeneral ? "col-span-12" : "col-span-8"}>
+                          <div className={isGeneral ? "col-span-7" : "col-span-8"}>
                             <label className="text-xs text-slate-600 mb-1 block">البند / الحساب — رقم أو اسم</label>
                             <div className={isAccount8 ? "ring-2 ring-amber-300 rounded-md" : ""}>
                               <SmartDropdown
@@ -455,6 +450,10 @@ export default function JournalEntriesPage() {
                               />
                             </div>
                           </div>
+                          {isGeneral && <div className="col-span-5">
+                            <label className="text-xs text-slate-600 mb-1 block">شرح السطر</label>
+                            <Input value={line.description || ""} onChange={e => updateLine(i, "description", e.target.value)} />
+                          </div>}
                           {!isGeneral && <div className="col-span-4">
                             <label className="text-xs text-slate-600 mb-1 block">نوع الخدمة</label>
                             <SmartDropdown options={serviceTypeOptions} value={line.service_type || ""} onChange={v => updateLine(i, "service_type", v)} placeholder="اختر الخدمة" />
@@ -463,10 +462,43 @@ export default function JournalEntriesPage() {
 
                         {/* Row 2: Airline / Currency / Debit / Credit */}
                         <div className="grid grid-cols-12 gap-3 items-end">
-                          {isGeneral && <div className="col-span-5">
-                            <label className="text-xs text-slate-600 mb-1 block">شرح السطر</label>
-                            <Input value={line.description || ""} onChange={e => updateLine(i, "description", e.target.value)} />
-                          </div>}
+                          {isGeneral && (() => {
+                            const side = (line as any).side || (Number(line.credit) > 0 ? "credit" : "debit");
+                            const amt = side === "credit" ? line.credit : line.debit;
+                            const cur = line.transaction_currency || "EGP";
+                            const r = lineRate(line);
+                            const setSide = (sd: string) => { const v = Number(amt) || 0; setLines(ls => ls.map((x, k) => k === i ? { ...x, side: sd, debit: sd === "debit" ? v : 0, credit: sd === "credit" ? v : 0 } as any : x)); };
+                            const setAmt = (v: string) => setLines(ls => ls.map((x, k) => k === i ? { ...x, side, debit: side === "debit" ? v : 0, credit: side === "credit" ? v : 0 } as any : x));
+                            return <>
+                              <div className="col-span-2">
+                                <label className="text-xs text-slate-600 mb-1 block">الطرف</label>
+                                <Select value={side} onValueChange={setSide}>
+                                  <SelectTrigger className={side === "debit" ? "text-red-700" : "text-green-700"}><SelectValue /></SelectTrigger>
+                                  <SelectContent><SelectItem value="debit">مدين</SelectItem><SelectItem value="credit">دائن</SelectItem></SelectContent>
+                                </Select>
+                              </div>
+                              <div className="col-span-2">
+                                <label className="text-xs text-slate-600 mb-1 block">القيمة ({cur})</label>
+                                <Input type="number" className="text-right" value={amt || ""} onChange={e => setAmt(e.target.value)} />
+                              </div>
+                              <div className="col-span-2">
+                                <label className="text-xs text-slate-600 mb-1 block">العملة</label>
+                                <Select value={cur} onValueChange={v => setLines(ls => ls.map((x, k) => k === i ? { ...x, transaction_currency: v, rate_manual: false, exchange_rate: v === "EGP" ? 1 : Number(cbeQuote?.[v]?.buy_rate) || 0 } as any : x))}>
+                                  <SelectTrigger><SelectValue /></SelectTrigger>
+                                  <SelectContent>{CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                                </Select>
+                              </div>
+                              <div className="col-span-2">
+                                <label className="text-xs text-slate-600 mb-1 block">سعر التحويل</label>
+                                <Input type="number" step="0.0001" disabled={cur === "EGP"} readOnly={cur !== "EGP" && !(line as any).rate_manual} className={!(line as any).rate_manual ? "bg-slate-100" : ""} value={r || ""} onChange={e => updateLine(i, "exchange_rate", e.target.value)} />
+                                {cur !== "EGP" && <label className="flex items-center gap-1 text-[10px] text-slate-600 mt-1"><input type="checkbox" checked={!!(line as any).rate_manual} onChange={e => updateLine(i, "rate_manual", e.target.checked)} />يدوي</label>}
+                              </div>
+                              <div className="col-span-3">
+                                <label className="text-xs text-slate-600 mb-1 block">المقابل بالجنيه (EGP)</label>
+                                <Input readOnly className="bg-slate-100 text-right font-mono" value={((Number(amt) || 0) * r).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} />
+                              </div>
+                            </>;
+                          })()}
                           {!isGeneral && <><div className="col-span-3">
                             <label className="text-xs text-slate-600 mb-1 block">شركة الطيران</label>
                             <SmartDropdown options={airlineOptions} value={line.airline_id || ""} onChange={v => updateLine(i, "airline_id", v)} placeholder="اختر الشركة" />
@@ -478,14 +510,14 @@ export default function JournalEntriesPage() {
                               <SelectContent>{CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                             </Select>
                           </div></>}
-                          <div className="col-span-3">
-                            <label className="text-xs text-slate-600 mb-1 block">مدين{isGeneral ? ` (${entryCurrency})` : ""}</label>
+                          {!isGeneral && <><div className="col-span-3">
+                            <label className="text-xs text-slate-600 mb-1 block">مدين</label>
                             <Input type="number" className="text-right" value={line.debit || ""} onChange={e => updateLine(i, "debit", e.target.value)} placeholder="0.00" />
                           </div>
                           <div className="col-span-3">
-                            <label className="text-xs text-slate-600 mb-1 block">دائن{isGeneral ? ` (${entryCurrency})` : ""}</label>
+                            <label className="text-xs text-slate-600 mb-1 block">دائن</label>
                             <Input type="number" className="text-right" value={line.credit || ""} onChange={e => updateLine(i, "credit", e.target.value)} placeholder="0.00" />
-                          </div>
+                          </div></>}
                           <div className="col-span-1 flex justify-end">
                             {lines.length > 1 && (
                               <Button size="icon" variant="ghost" className="text-red-500" onClick={() => removeLine(i)}><X size={16} /></Button>
@@ -545,7 +577,7 @@ export default function JournalEntriesPage() {
                   <Button variant="outline" size="sm" onClick={addLine}>+ سطر جديد</Button>
                   <div className="flex items-center gap-4">
                     <div className="text-xs font-mono">
-                      مدين: <b>{totalDebit.toLocaleString()}</b> · دائن: <b>{totalCredit.toLocaleString()}</b>{" "}
+                      {isGeneral ? "بالجنيه — " : ""}مدين: <b>{totalDebit.toLocaleString()}</b> · دائن: <b>{totalCredit.toLocaleString()}</b>{" "}
                       {isBalanced ? <span className="text-green-600">✓ متوازن</span> : <span className="text-red-600">فرق: {Math.abs(totalDebit - totalCredit).toLocaleString()}</span>}
                     </div>
                     <Button className="bg-[#1e3a5f] hover:bg-[#264a76]" onClick={() => {
