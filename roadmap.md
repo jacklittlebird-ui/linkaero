@@ -2,7 +2,7 @@
 - [x] Print treasury movement, T-account, custody and separate advance statements together
 - [x] Require all four cost centres on cost vouchers in the form and database
 - [x] Separate advances from custody with employee-repayment settlement and balance refresh
-- [ ] Email month-end advance statement to HR — waiting for HR email address and a verified sender domain
+- [ ] Email month-end advance statement to HR at hr@linkagency.com — waiting for sender-domain setup; sending and scheduling are not implemented yet
 - [x] Verify cost-voucher supplier picker (434 chart accounts) and flight number/date inputs; no financial test voucher saved
 - [x] Verify treasury period statement against existing movements, Excel download and PDF print with logo; monthly report loads, persisted flight-cost readback not tested
 - [x] Restore cash-box selection: 11 cash boxes configured with exact chart links; EGP selection verified in authenticated UI without financial test entries
