@@ -162,6 +162,13 @@
       "when": 1794727015218,
       "tag": "0022_treasury_cost_flight_supplier",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794903692923,
+      "tag": "0023_treasury_cost_centres_and_advance_cash_recovery",
+      "breakpoints": true
     }
   ]
 }

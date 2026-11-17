@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,14 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Info, Printer, FileSpreadsheet, FileText } from "lucide-react";
 import { exportToExcel } from "@/lib/exportExcel";
 import { printRtlReport } from "@/lib/printTable";
-import { computeRange, isPending, TVoucher } from "@/lib/treasuryBalance";
+import { computeRange, isPending, isAdvance, isCustody, advanceRemaining, TVoucher } from "@/lib/treasuryBalance";
 import { useAuth } from "@/contexts/AuthContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 const fmt = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 2 });
 const toDMY = (iso: string) => iso.split("-").reverse().join("/");
 const fromDMY = (s: string) => { const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? `${m[3]}-${m[2]}-${m[1]}` : null; };
 
-type Row = TVoucher & { id: string; voucher_no: string; description: string; party_name: string | null };
+type Row = TVoucher & { id: string; voucher_no: string; description: string; party_name: string | null; repayment_plan?: string | null };
 
 const Heading = ({ children }: { children: React.ReactNode }) => (
   <h2 className="border-r-4 border-accent pr-2 text-base font-bold">{children}</h2>
@@ -24,6 +26,21 @@ const Heading = ({ children }: { children: React.ReactNode }) => (
 
 export default function TreasuryDailyBoard() {
   const { session } = useAuth();
+  const qc = useQueryClient();
+  const [repayTarget, setRepayTarget] = useState<Row | null>(null);
+  const [repayAmount, setRepayAmount] = useState(0);
+  const recovery = useMutation({
+    mutationFn: async () => {
+      if (!repayTarget || repayAmount <= 0 || repayAmount > advanceRemaining(repayTarget)) throw new Error("أدخل مبلغ سداد لا يتجاوز المتبقي");
+      const { error } = await supabase.rpc("record_advance_recovery", { _voucher_id: repayTarget.id, _amount: repayAmount, _notes: "سداد الموظف للخزينة" });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      for (const key of ["treasury_vouchers_board", "treasury_vouchers", "v_treasury_balances", "journal_entries"]) qc.invalidateQueries({ queryKey: [key] });
+      setRepayTarget(null); toast.success("تم تسجيل السداد وترحيل سند القبض");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
   const today = new Date().toISOString().slice(0, 10);
   const [fromText, setFromText] = useState(toDMY(today));
   const [toText, setToText] = useState(toDMY(today));
@@ -40,7 +57,7 @@ export default function TreasuryDailyBoard() {
       const result: Row[] = [];
       for (let offset = 0; ; offset += 1000) {
       const { data, error } = await supabase.from("treasury_vouchers")
-        .select("id,voucher_no,voucher_type,payment_subtype,status,currency,amount,voucher_date,description,party_name,settled_amount")
+        .select("id,voucher_no,voucher_type,payment_subtype,status,currency,amount,voucher_date,description,party_name,settled_amount,recovered_amount,repayment_plan")
         .neq("status", "void").order("voucher_date").order("id").range(offset, offset + 999);
       if (error) throw error;
       result.push(...(data ?? []) as unknown as Row[]);
@@ -61,7 +78,8 @@ export default function TreasuryDailyBoard() {
   const inRange = (v: Row) => v.voucher_date >= from && v.voucher_date <= to;
   const ins = vouchers.filter((v) => v.currency === currency && inRange(v) && v.voucher_type === "receipt" && ["approved", "posted", "settled"].includes(v.status));
   const outs = vouchers.filter((v) => v.currency === currency && inRange(v) && v.voucher_type !== "receipt" && !isPending(v) && ["approved", "posted", "settled"].includes(v.status));
-  const pendings = vouchers.filter((v) => v.currency === currency && isPending(v) && v.voucher_date <= date);
+  const pendings = vouchers.filter((v) => v.currency === currency && isCustody(v) && v.voucher_date <= date);
+  const advances = vouchers.filter((v) => v.currency === currency && isAdvance(v) && v.voucher_date <= date);
   const active = pendings.filter((v) => v.status !== "settled");
   const settled = pendings.filter((v) => v.status === "settled");
   const rows = Math.max(ins.length, outs.length, 1);
@@ -74,11 +92,16 @@ export default function TreasuryDailyBoard() {
     return { date: toDMY(v.voucher_date), no: v.voucher_no, desc: v.description || v.party_name || "", inAmt: isIn ? amt : 0, outAmt: isIn ? 0 : amt, bal: run };
   });
   const period = `من ${toDMY(from)} إلى ${toDMY(to)} — ${currency}`;
-  const summary: [string, string][] = [["رصيد أول المدة", fmt(day.opening)], ["إجمالي وارد", fmt(day.receipts)], ["إجمالي منصرف", fmt(day.payments)], ["رصيد كاش", fmt(day.cash)], ["معلقات", fmt(day.pending)], ["الرصيد النهائي", fmt(day.final)]];
+  const summary: [string, string][] = [["رصيد أول المدة", fmt(day.opening)], ["إجمالي وارد", fmt(day.receipts)], ["إجمالي منصرف", fmt(day.payments)], ["رصيد كاش", fmt(day.cash)], ["معلقات", fmt(day.pending)], ["السلف", fmt(day.advances)], ["الرصيد النهائي", fmt(day.final)]];
   const head = ["التاريخ", "رقم الإذن", "البيان", "وارد", "منصرف", "الرصيد"];
   const doPrint = () => printRtlReport({ title: "كشف حركة الخزينة", subtitle: period, summary, head,
     body: [["", "", "رصيد أول المدة", "", "", fmt(day.opening)], ...stRows.map((r) => [r.date, r.no, r.desc, r.inAmt ? fmt(r.inAmt) : "", r.outAmt ? fmt(r.outAmt) : "", fmt(r.bal)])],
-    footer: ["", "", "الإجمالي", fmt(day.receipts), fmt(day.payments), fmt(day.cash)] });
+    footer: ["", "", "الإجمالي", fmt(day.receipts), fmt(day.payments), fmt(day.cash)],
+    sections: [
+      { title: "الخزينة — T-Account", head: ["الوارد — رقم السند / البيان", "المبلغ", "المنصرف — رقم السند / البيان", "المبلغ"], body: Array.from({ length: rows }, (_, i) => [ins[i] ? `${ins[i].voucher_no} — ${ins[i].description}` : "", ins[i] ? fmt(Number(ins[i].amount)) : "", outs[i] ? `${outs[i].voucher_no} — ${outs[i].description}` : "", outs[i] ? fmt(Number(outs[i].amount)) : ""]), footer: ["إجمالي وارد", fmt(day.receipts), "إجمالي منصرف", fmt(day.payments)] },
+      { title: "بيان المعلقات", head: ["التاريخ", "السند", "البيان", "المبلغ", "الحالة", "المسوّى"], body: pendings.map((v) => [toDMY(v.voucher_date), v.voucher_no, v.description || v.party_name || "", fmt(Number(v.amount)), v.status === "settled" ? "مسوّى" : "نشط", fmt(Number(v.settled_amount || 0))]) },
+      { title: "بيان سلف الموظفين — HR", head: ["التاريخ", "السند", "الموظف", "السلفة", "المسدد", "المتبقي", "خطة السداد"], body: advances.map((v) => [toDMY(v.voucher_date), v.voucher_no, v.party_name || v.description, fmt(Number(v.amount)), fmt(Number(v.recovered_amount || 0)), fmt(advanceRemaining(v)), v.repayment_plan || "—"]) },
+    ] });
   const doExcel = () => exportToExcel([
     { "التاريخ": "", "رقم الإذن": "", "البيان": "رصيد أول المدة", "وارد": "", "منصرف": "", "الرصيد": day.opening },
     ...stRows.map((r) => ({ "التاريخ": r.date, "رقم الإذن": r.no, "البيان": r.desc, "وارد": r.inAmt || "", "منصرف": r.outAmt || "", "الرصيد": r.bal })),
@@ -140,6 +163,7 @@ export default function TreasuryDailyBoard() {
         {pill(`إجمالي منصرف ${fmt(day.payments)}`, "bg-destructive/10 text-destructive")}<span>=</span>
         {pill(`رصيد كاش ${fmt(day.cash)}`, "bg-success/10 text-success")}<span>−</span>
         {pill(`معلقات ${fmt(day.pending)}`, "bg-warning/10 text-warning")}<span>=</span>
+        {pill(`السلف ${fmt(day.advances)}`, "bg-warning/10 text-warning")}<span>−</span>
         {pill(`الرصيد النهائي ${fmt(day.final)}`, "bg-primary text-primary-foreground")}
       </div>
       <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm text-primary">
@@ -196,6 +220,17 @@ export default function TreasuryDailyBoard() {
         </CardContent>
       </Card>
 
+      <Heading>بيان سلف الموظفين ({fmt(day.advances)})</Heading>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-muted"><tr>{["التاريخ", "السند", "الموظف", "السلفة", "المسدد", "المتبقي", "التسوية"].map((h) => <th className="p-2 text-right" key={h}>{h}</th>)}</tr></thead>
+          <tbody>{advances.map((v) => <tr className="border-t" key={v.id}>
+            <td className="p-2">{toDMY(v.voucher_date)}</td><td className="p-2">{v.voucher_no}</td><td className="p-2">{v.party_name || v.description}</td>
+            <td className="p-2">{fmt(Number(v.amount))}</td><td className="p-2">{fmt(Number(v.recovered_amount || 0))}</td><td className="p-2">{fmt(advanceRemaining(v))}</td>
+            <td className="p-2">{["approved", "posted"].includes(v.status) && advanceRemaining(v) > 0 ? <Button size="sm" variant="outline" onClick={() => { setRepayTarget(v); setRepayAmount(advanceRemaining(v)); }}>تسوية</Button> : advanceRemaining(v) === 0 ? "مسوّاة" : "بانتظار الاعتماد"}</td>
+          </tr>)}{!advances.length && <tr><td className="p-3 text-center" colSpan={7}>لا توجد سلف</td></tr>}</tbody>
+        </table>
+      </div>
       <Heading>تسوية المعلقات</Heading>
       <div className="grid gap-3 md:grid-cols-2">
         <div className="rounded-lg border border-warning/40 bg-warning/10 p-4">
@@ -205,7 +240,7 @@ export default function TreasuryDailyBoard() {
               <div key={v.id} className="flex items-center justify-between border-t py-2 text-sm">
                 <span>{v.voucher_no} — {v.description || v.party_name}</span>
                 <span className="flex items-center gap-2">{fmt(Number(v.amount))}
-                  <Button asChild size="sm" variant="outline"><Link to="/accounting/treasury-vouchers">تسوية</Link></Button>
+                  <Button asChild size="sm" variant="outline"><Link to="/accounting/treasury-vouchers?tab=pending_custody">تسوية</Link></Button>
                 </span>
               </div>
             ))}
@@ -223,6 +258,14 @@ export default function TreasuryDailyBoard() {
       <div className="rounded-lg border border-success/40 bg-success/5 p-3 text-sm">
         عند التسوية: المبلغ المصروف فعلاً ← إذن صرف ببنوده | المرتجع ← يعود للكاش | المعلق ← يختفي من الرصيد
       </div>
+      <Dialog open={!!repayTarget} onOpenChange={(open) => { if (!open) setRepayTarget(null); }}>
+        <DialogContent dir="rtl"><DialogHeader><DialogTitle>تسوية سلفة — {repayTarget?.voucher_no}</DialogTitle></DialogHeader>
+          <p>{repayTarget?.party_name} — المتبقي: {repayTarget ? fmt(advanceRemaining(repayTarget)) : ""} {repayTarget?.currency}</p>
+          <Label htmlFor="advance-repaid">المبلغ الذي سدده الموظف للخزينة</Label>
+          <Input id="advance-repaid" type="number" min="0" step="0.01" value={repayAmount} onChange={(e) => setRepayAmount(Number(e.target.value))} />
+          <DialogFooter><Button variant="outline" onClick={() => setRepayTarget(null)}>إلغاء</Button><Button disabled={recovery.isPending} onClick={() => recovery.mutate()}>تسجيل السداد</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

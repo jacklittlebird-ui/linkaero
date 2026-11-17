@@ -50,6 +50,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import linkAeroLogo from "@/assets/linkaero-logo.png";
 import { ChevronsUpDown, Check, Pencil, Trash2 } from "lucide-react";
 import { filterTreasuryAccounts, selectTreasuryRate } from "@/lib/treasuryEntry";
+import { costCentresComplete } from "@/lib/treasuryBalance";
 
 type VoucherType = "receipt" | "payment" | "pending";
 type PaymentSubtype = "general" | "pending_custody" | "advance" | "cost";
@@ -584,6 +585,7 @@ export default function TreasuryVouchersPage() {
       if (automaticRate === null) throw new Error(manualActive ? "أدخل سعر الصرف اليدوي" : "لا يوجد سعر موثق من البنك المركزي — فعّل الإدخال اليدوي");
       if (!form.cash_account_id && !form.bank_account_id) throw new Error("اختر الخزينة أو الحساب البنكي");
       if (!form.amount || form.amount <= 0) throw new Error("المبلغ يجب أن يكون أكبر من صفر");
+      if (form.payment_subtype === "cost" && !costCentresComplete(form)) throw new Error("سند التكلفة يتطلب العميل / شركة الطيران، المحطة، نوع الخدمة، والمورد");
       if ((form.lines ?? []).length === 0 || (form.lines ?? []).some((l) => !l.account_id))
         throw new Error(form.payment_subtype === null ? "اختر الحساب الدائن لكل بند" : "اختر الحساب المدين لكل بند");
       if ((form.lines ?? []).some((l) => !(Number(l.amount) > 0))) throw new Error("مبلغ كل بند يجب أن يكون أكبر من صفر");
@@ -605,7 +607,7 @@ export default function TreasuryVouchersPage() {
 
       const isReceipt = form.payment_subtype === null;
       const payload: Record<string, unknown> = {
-        number_reservation_id: editing ? undefined : voucherNumber!.id,
+        number_reservation_id: editing ? undefined : voucherNumber?.id,
         voucher_type: isReceipt ? "receipt" : form.payment_subtype === "pending_custody" ? "pending" : "payment",
         payment_subtype: form.payment_subtype,
         pending_kind: form.payment_subtype === "pending_custody" ? form.pending_kind : null,
@@ -712,6 +714,7 @@ export default function TreasuryVouchersPage() {
       qc.invalidateQueries({ queryKey: ["v_treasury_balances"] });
       setSettleTarget(null);
       setSettleNotes("");
+      qc.invalidateQueries({ queryKey: ["treasury_vouchers_board"] });
       toast.success("تمت التسوية — رُحّل القيد وعاد الفرق إلى رصيد الخزينة");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -720,6 +723,7 @@ export default function TreasuryVouchersPage() {
   const recover = useMutation({
     mutationFn: async () => {
       if (!recoverTarget) return;
+      if (Number(recoverAmount) <= 0 || Number(recoverAmount) > Number(recoverTarget.amount) - Number(recoverTarget.recovered_amount || 0)) throw new Error("أدخل مبلغ سداد لا يتجاوز المتبقي");
       const { error } = await (supabase.rpc as any)("record_advance_recovery", {
         _voucher_id: recoverTarget.id,
         _amount: Number(recoverAmount),
@@ -731,6 +735,8 @@ export default function TreasuryVouchersPage() {
       qc.invalidateQueries({ queryKey: ["treasury_vouchers"] });
       qc.invalidateQueries({ queryKey: ["v_treasury_balances"] });
       setRecoverTarget(null);
+      qc.invalidateQueries({ queryKey: ["treasury_vouchers_board"] });
+      qc.invalidateQueries({ queryKey: ["journal_entries"] });
       toast.success("Advance instalment recorded");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -1035,7 +1041,7 @@ export default function TreasuryVouchersPage() {
                               Number(v.recovered_amount || 0) < Number(v.amount) && (
                               <Button size="sm" variant="secondary"
                                 onClick={() => { setRecoverTarget(v); setRecoverAmount(0); }}>
-                                <HandCoins className="h-3 w-3" /><span className="ms-1">Recover</span>
+                                <HandCoins className="h-3 w-3" /><span className="ms-1">تسوية</span>
                               </Button>
                             )}
                             {EDITABLE_STATUSES.includes(v.status) && (
@@ -1235,7 +1241,7 @@ export default function TreasuryVouchersPage() {
               </Select>
             </div>
             <div>
-              <Label>المحطة / الفرع</Label>
+              <Label>{isCost ? "مركز التكلفة 2 — المطار / المحطة (إلزامي)" : "المحطة / الفرع"}</Label>
               <Select value={form.station_id} onValueChange={(v) => setForm({ ...form, station_id: v })}
                 disabled={!form.company_id || !stations.some((s: any) => s.company_id === form.company_id)}>
                 <SelectTrigger><SelectValue placeholder={form.company_id && !stations.some((s: any) => s.company_id === form.company_id) ? "لا توجد محطات لهذه الشركة" : "اختر المحطة"} /></SelectTrigger>
@@ -1280,7 +1286,7 @@ export default function TreasuryVouchersPage() {
             {isCost && (
               <>
                 <div>
-                  <Label>مركز التكلفة 1 — العميل / شركة الطيران</Label>
+                  <Label>مركز التكلفة 1 — العميل / شركة الطيران (إلزامي)</Label>
                   <Select value={form.airline_id} onValueChange={(v) => setForm({ ...form, airline_id: v })}>
                     <SelectTrigger><SelectValue placeholder="اختر الشركة" /></SelectTrigger>
                     <SelectContent>
@@ -1289,7 +1295,7 @@ export default function TreasuryVouchersPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>مركز التكلفة 3 — نوع الخدمة</Label>
+                  <Label>مركز التكلفة 3 — نوع الخدمة (إلزامي)</Label>
                   <Select value={form.service_type} onValueChange={(v) => setForm({ ...form, service_type: v })}>
                     <SelectTrigger><SelectValue placeholder="اختر الخدمة" /></SelectTrigger>
                     <SelectContent>
@@ -1299,7 +1305,7 @@ export default function TreasuryVouchersPage() {
                   </Select>
                 </div>
                 <AccountPicker accounts={supplierAccounts} value={form.supplier_account_id} side="debit"
-                  label="مركز التكلفة 4 — المورد (من دليل الحسابات)"
+                  label="مركز التكلفة 4 — المورد (من دليل الحسابات، إلزامي)"
                   onChange={(id) => {
                     const a = supplierAccounts.find((x) => x.id === id);
                     setForm((f) => ({ ...f, supplier_account_id: id, party_type: f.party_type || "Supplier",

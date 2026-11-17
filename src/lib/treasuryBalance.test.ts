@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeDay, TVoucher } from "./treasuryBalance";
+import { computeDay, TVoucher, isCustody, advanceRemaining, costCentresComplete } from "./treasuryBalance";
 
 const v = (p: Partial<TVoucher>): TVoucher => ({
   voucher_type: "receipt", payment_subtype: null, status: "posted",
@@ -7,6 +7,20 @@ const v = (p: Partial<TVoucher>): TVoucher => ({
 });
 
 describe("treasury balance equation", () => {
+  it("keeps advances outside custody totals", () => {
+    const advance = v({ voucher_type: "payment", payment_subtype: "advance", amount: 4000, recovered_amount: 1000 });
+    const r = computeDay([v({ amount: 10000 }), v({ voucher_type: "pending", amount: 2000 }), advance], "EGP", "2025-06-11");
+    expect(isCustody(advance)).toBe(false);
+    expect(r).toMatchObject({ pending: 2000, advances: 3000, final: 5000 });
+  });
+  it("fully repaid employee advance has no outstanding balance", () => {
+    expect(advanceRemaining(v({ payment_subtype: "advance", amount: 4000, recovered_amount: 4000 }))).toBe(0);
+  });
+  it("requires every one of the four cost centres", () => {
+    const centres = { airline_id: "airline", station_id: "station", service_type: "Security", supplier_account_id: "supplier" };
+    expect(costCentresComplete(centres)).toBe(true);
+    for (const key of Object.keys(centres)) expect(costCentresComplete({ ...centres, [key]: "" })).toBe(false);
+  });
   it("opening + receipts − payments − pending = final", () => {
     const r = computeDay([
       v({ amount: 45200, voucher_date: "2025-06-10" }),

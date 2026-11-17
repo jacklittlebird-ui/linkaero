@@ -10,3 +10,5 @@
 - Treasury Vouchers are the single entry point for all cash/bank receipts and payments (Treasury nav links point there); bank-to-cash cheques go through the Cash in Transit account (code 120130001) as two vouchers, so cash only increases when the cashier receives it and nothing is double-posted.
 - Treasury cost-voucher suppliers come from chart posting accounts under code 221 (supplier_account_id), and flight cost reporting reads treasury_vouchers.flight_no/flight_date; new supplier accounts appear without extra setup.
 - Treasury range statements and monthly flight-cost reports load all matching vouchers in ordered pages and refresh after voucher changes; this prevents API row limits and cached reports hiding financial movements.
+- Treasury advances are reported separately from custody and repaid only through record_advance_recovery, which creates a posted receipt voucher; this keeps HR balances, cash and the ledger consistent.
+- Cost vouchers enforce airline, station, service type and supplier both in the form and with a database trigger; this keeps cost reports complete for all clients.
