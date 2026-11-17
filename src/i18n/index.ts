@@ -33,7 +33,7 @@ applyDir(i18n.language || "en");
 i18n.on("languageChanged", applyDir);
 
 // Accounts whose portal opens in Arabic (RTL) by default unless the user picked a language themselves.
-export const ARABIC_DEFAULT_ACCOUNTS = ["acceng@linkagency.com", "accpay@linkagency.com"];
+export const ARABIC_DEFAULT_ACCOUNTS = ["acceng@linkagency.com", "accpay@linkagency.com", "hdqtre@linkagency.com"];
 const chosenKey = (email: string) => `linkaero.lang.chosen.${email.toLowerCase()}`;
 
 export function applyAccountDefaultLanguage(email?: string | null) {

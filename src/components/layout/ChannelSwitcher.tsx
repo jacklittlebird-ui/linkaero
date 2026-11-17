@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 
 const CHANNEL_ICONS: Record<Channel, React.ReactNode> = {
+  treasury: <Landmark size={16} />,
   clearance: <ShieldCheck size={14} />,
   station: <Building2 size={14} />,
   contracts: <FileText size={14} />,

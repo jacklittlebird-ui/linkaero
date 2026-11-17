@@ -176,6 +176,13 @@
       "when": 1794904613103,
       "tag": "0024_cost_voucher_supplier_from_chart",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794909043720,
+      "tag": "0025_treasury_portal_role",
+      "breakpoints": true
     }
   ]
 }

@@ -36,6 +36,7 @@ const TREASURY_SECTION: NavSection = {
 
 // Channel-specific navigation configs
 const channelNavs: Record<Channel, NavSection[]> = {
+  treasury: [TREASURY_SECTION],
   clearance: [
     { label: "Dashboard", icon: <LayoutDashboard size={18} />, path: "/" },
     {

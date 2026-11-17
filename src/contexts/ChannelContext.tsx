@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
 
-export type Channel = "clearance" | "station" | "contracts" | "operations" | "receivables" | "payables" | "general_accounts" | "admin";
+export type Channel = "clearance" | "station" | "contracts" | "operations" | "receivables" | "payables" | "general_accounts" | "treasury" | "admin";
 
 export const CHANNEL_LABELS: Record<Channel, string> = {
   clearance: "Clearance",
@@ -12,6 +12,7 @@ export const CHANNEL_LABELS: Record<Channel, string> = {
   receivables: "Receivables",
   payables: "Payables",
   general_accounts: "General Accounts",
+  treasury: "Treasury",
   admin: "Management",
 };
 
@@ -22,6 +23,7 @@ export const CHANNEL_DESCRIPTIONS: Record<Channel, string> = {
   operations: "Monitor, review & approve station reports",
   receivables: "Invoice generation & client billing",
   payables: "Vendor invoices & third-party payments",
+  treasury: "Cash, bank & treasury vouchers",
   general_accounts: "Full payables, accounting & receivables (read-only)",
   admin: "Full system administration",
 };
@@ -29,7 +31,7 @@ export const CHANNEL_DESCRIPTIONS: Record<Channel, string> = {
 // Map DB roles to channels
 function rolesToChannels(roles: string[]): Channel[] {
   const channels: Channel[] = [];
-  if (roles.includes("admin")) return ["admin", "clearance", "station", "contracts", "operations", "receivables", "payables", "general_accounts"];
+  if (roles.includes("admin")) return ["admin", "clearance", "station", "contracts", "operations", "receivables", "payables", "general_accounts", "treasury"];
   if (roles.includes("clearance")) channels.push("clearance");
   if (roles.includes("station_manager") || roles.includes("station_ops") || roles.includes("employee")) channels.push("station");
   if (roles.includes("contracts")) channels.push("contracts");
@@ -37,6 +39,7 @@ function rolesToChannels(roles: string[]): Channel[] {
   if (roles.includes("receivables")) channels.push("receivables");
   if (roles.includes("payables")) channels.push("payables");
   if (roles.includes("general_accounts") || roles.includes("accountant")) channels.push("general_accounts");
+  if (roles.includes("treasury")) channels.push("treasury");
   if (roles.includes("viewer") && channels.length === 0) channels.push("general_accounts");
   return channels.length > 0 ? channels : ["station"]; // default fallback
 }

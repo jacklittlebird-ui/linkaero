@@ -1,3 +1,4 @@
+import { Landmark } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -34,6 +35,7 @@ const WELCOME_BACKGROUNDS: { key: WelcomeBgKey; label: string; src: string }[] =
 const WELCOME_BG_STORAGE_KEY = "oneops.welcomeBgChoice";
 
 const CHANNEL_ICONS: Record<Channel, React.ReactNode> = {
+  treasury: <Landmark size={16} />,
   clearance: <ShieldCheck size={20} />,
   station: <Building2 size={20} />,
   contracts: <FileText size={20} />,
