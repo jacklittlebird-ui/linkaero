@@ -204,6 +204,13 @@
       "when": 1794911514942,
       "tag": "0028_admin_reset_treasury_vouchers_fn",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1794926845286,
+      "tag": "0029_treasury_internal_read_access",
+      "breakpoints": true
     }
   ]
 }
