@@ -7,6 +7,7 @@
 //                  Approved entries adjust the fund's current_balance
 //                  (Expense subtracts, Replenishment adds).
 
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -528,8 +529,8 @@ function ExpensesTab({
                 </div>
                 <div>
                   <Label>Date</Label>
-                  <Input
-                    type="date"
+                  <DateInput
+                    
                     value={editing?.expense_date ?? ""}
                     onChange={(e) => setEditing({ ...editing!, expense_date: e.target.value })}
                   />

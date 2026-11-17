@@ -1,6 +1,7 @@
 // Phase 2r: Customer Statements & Portal
 // - Airline customers see their own invoices, payment history, and account statements
 // - Finance/admin manage customer-user ↔ airline mappings and can view any airline's statement
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -308,11 +309,11 @@ export default function CustomerPortal() {
                     <div className="flex gap-2 items-end flex-wrap">
                       <div>
                         <Label className="text-xs">From</Label>
-                        <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-40" />
+                        <DateInput  value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-40" />
                       </div>
                       <div>
                         <Label className="text-xs">To</Label>
-                        <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-40" />
+                        <DateInput  value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-40" />
                       </div>
                       <Button variant="outline" onClick={() => refetchStmt()}>Refresh</Button>
                       <Button onClick={exportStatement} disabled={!statement.length}>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { useTranslation } from "react-i18next";
 import { useSupabaseTable } from "@/hooks/useSupabaseQuery";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -108,7 +109,7 @@ export default function ExchangeRatesPage() {
             <DialogHeader><DialogTitle>{editItem ? t("common.edit") : t("common.add")} {t("accounting.exchangeRates")}</DialogTitle></DialogHeader>
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2"><label className="text-xs font-medium">{t("accounting.date")} *</label>
-                <Input type="date" value={form.rate_date} onChange={e => setForm({ ...form, rate_date: e.target.value })} /></div>
+                <DateInput  value={form.rate_date} onChange={e => setForm({ ...form, rate_date: e.target.value })} /></div>
               <div><label className="text-xs font-medium">{t("accounting.baseCurrency")} *</label>
                 <Select value={form.base_currency} onValueChange={v => setForm({ ...form, base_currency: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>

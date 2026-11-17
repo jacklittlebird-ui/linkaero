@@ -1,6 +1,7 @@
 // Phase 2q: Vendor Portal & Self-Service
 // - Vendor self-service: submit invoices, view payment status, upload documents
 // - Finance/admin console: review vendor submissions, approve/reject, promote to vendor_invoices
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -589,12 +590,12 @@ export default function VendorPortal() {
               </div>
               <div>
                 <Label>Invoice Date</Label>
-                <Input type="date" value={subForm.invoice_date}
+                <DateInput  value={subForm.invoice_date}
                   onChange={(e) => setSubForm(f => ({ ...f, invoice_date: e.target.value }))} />
               </div>
               <div>
                 <Label>Due Date</Label>
-                <Input type="date" value={subForm.due_date}
+                <DateInput  value={subForm.due_date}
                   onChange={(e) => setSubForm(f => ({ ...f, due_date: e.target.value }))} />
               </div>
               <div>
@@ -691,7 +692,7 @@ export default function VendorPortal() {
               </div>
               <div>
                 <Label>Expiry Date</Label>
-                <Input type="date" value={docForm.expiry_date}
+                <DateInput  value={docForm.expiry_date}
                   onChange={(e) => setDocForm(f => ({ ...f, expiry_date: e.target.value }))} />
               </div>
             </div>

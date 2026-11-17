@@ -2,6 +2,7 @@
 // - Unrealised revaluation on open AR (invoices) and AP (vendor_invoices)
 // - Realised gain/loss journal-style entries on settlement
 // - Historical-rate snapshots via saved run lines
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -310,7 +311,7 @@ export default function FxGainLoss() {
         <div className="flex gap-2 items-center">
           <div>
             <Label className="text-xs">As-of date</Label>
-            <Input type="date" value={asOf} onChange={e => setAsOf(e.target.value)} className="w-40" />
+            <DateInput  value={asOf} onChange={e => setAsOf(e.target.value)} className="w-40" />
           </div>
           <Button onClick={buildPreview}><PlayCircle className="h-4 w-4 mr-1" /> Preview Revaluation</Button>
           <Button variant="outline" onClick={() => setRealizedDialog(true)}>+ Realised Entry</Button>
@@ -506,7 +507,7 @@ export default function FxGainLoss() {
               notes: String(fd.get("notes") || "") || null,
             });
           }} className="grid grid-cols-2 gap-3">
-            <div><Label>Date</Label><Input name="entry_date" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} /></div>
+            <div><Label>Date</Label><DateInput name="entry_date"  required defaultValue={new Date().toISOString().slice(0, 10)} /></div>
             <div>
               <Label>Source</Label>
               <Select name="source_type" defaultValue="AR">

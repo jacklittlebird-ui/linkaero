@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -205,9 +206,9 @@ export default function GovernmentGrantsPage() {
                         </Select>
                       </TableCell>
                       <TableCell><Input type="number" className="w-28" value={g.amount} onChange={(e) => update(g.id, { amount: Number(e.target.value) || 0 })} /></TableCell>
-                      <TableCell><Input type="date" className="w-36" value={g.recognitionStart} onChange={(e) => update(g.id, { recognitionStart: e.target.value })} /></TableCell>
-                      <TableCell><Input type="date" className="w-36" value={g.recognitionEnd} onChange={(e) => update(g.id, { recognitionEnd: e.target.value })} /></TableCell>
-                      <TableCell><Input type="date" className="w-36" value={g.reportingDate} onChange={(e) => update(g.id, { reportingDate: e.target.value })} /></TableCell>
+                      <TableCell><DateInput  className="w-36" value={g.recognitionStart} onChange={(e) => update(g.id, { recognitionStart: e.target.value })} /></TableCell>
+                      <TableCell><DateInput  className="w-36" value={g.recognitionEnd} onChange={(e) => update(g.id, { recognitionEnd: e.target.value })} /></TableCell>
+                      <TableCell><DateInput  className="w-36" value={g.reportingDate} onChange={(e) => update(g.id, { reportingDate: e.target.value })} /></TableCell>
                       <TableCell className="text-center">
                         <input type="checkbox" checked={g.conditionsMet} onChange={(e) => update(g.id, { conditionsMet: e.target.checked })} />
                       </TableCell>

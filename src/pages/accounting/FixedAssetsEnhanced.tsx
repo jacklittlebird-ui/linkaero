@@ -4,6 +4,7 @@
 // - Transfer workflow (location, custodian, department)
 // - Disposal workflow (sale/scrap/donation) with gain/loss
 // - Physical count sessions with variance detection
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -221,7 +222,7 @@ function TransferDialog({ assets, onSave, saving }: { assets: Asset[]; onSave: (
             <SelectContent>{assets.map(a => <SelectItem key={a.id} value={a.id}>{a.asset_code} — {a.asset_name}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-        <div><Label>Transfer Date</Label><Input type="date" value={form.transfer_date} onChange={(e) => setForm({ ...form, transfer_date: e.target.value })} /></div>
+        <div><Label>Transfer Date</Label><DateInput  value={form.transfer_date} onChange={(e) => setForm({ ...form, transfer_date: e.target.value })} /></div>
         <div><Label>Reference No</Label><Input value={form.reference_no} onChange={(e) => setForm({ ...form, reference_no: e.target.value })} /></div>
         <div><Label>From Location</Label><Input value={form.from_location} onChange={(e) => setForm({ ...form, from_location: e.target.value })} /></div>
         <div><Label>To Location</Label><Input value={form.to_location} onChange={(e) => setForm({ ...form, to_location: e.target.value })} /></div>
@@ -367,7 +368,7 @@ function DisposalDialog({ assets, onSave, saving }: { assets: Asset[]; onSave: (
             <SelectContent>{assets.map(a => <SelectItem key={a.id} value={a.id}>{a.asset_code} — {a.asset_name}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-        <div><Label>Disposal Date</Label><Input type="date" value={form.disposal_date} onChange={(e) => setForm({ ...form, disposal_date: e.target.value })} /></div>
+        <div><Label>Disposal Date</Label><DateInput  value={form.disposal_date} onChange={(e) => setForm({ ...form, disposal_date: e.target.value })} /></div>
         <div>
           <Label>Type</Label>
           <Select value={form.disposal_type} onValueChange={(v) => setForm({ ...form, disposal_type: v })}>
@@ -496,7 +497,7 @@ function NewCountDialog({ onSave, saving }: { onSave: (p: any) => void; saving: 
       <DialogHeader><DialogTitle>New Physical Count Session</DialogTitle></DialogHeader>
       <div className="space-y-3">
         <div><Label>Count Number</Label><Input value={form.count_no} onChange={(e) => setForm({ ...form, count_no: e.target.value })} /></div>
-        <div><Label>Count Date</Label><Input type="date" value={form.count_date} onChange={(e) => setForm({ ...form, count_date: e.target.value })} /></div>
+        <div><Label>Count Date</Label><DateInput  value={form.count_date} onChange={(e) => setForm({ ...form, count_date: e.target.value })} /></div>
         <div><Label>Location</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
         <div><Label>Department</Label><Input value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} /></div>
         <div><Label>Notes</Label><Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>

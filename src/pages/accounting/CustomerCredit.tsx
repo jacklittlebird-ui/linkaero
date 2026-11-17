@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -342,7 +343,7 @@ export default function CustomerCredit() {
             </div>
             <div>
               <Label>Next Review Date</Label>
-              <Input type="date" value={editing.next_review_date || ""} onChange={(e) => setEditing({ ...editing, next_review_date: e.target.value })} />
+              <DateInput  value={editing.next_review_date || ""} onChange={(e) => setEditing({ ...editing, next_review_date: e.target.value })} />
             </div>
             {editing.on_hold && (
               <div className="col-span-2">

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -143,11 +144,11 @@ export default function EarningsPerSharePage() {
         <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <Label>From</Label>
-            <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+            <DateInput  value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
           </div>
           <div>
             <Label>To</Label>
-            <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+            <DateInput  value={toDate} onChange={(e) => setToDate(e.target.value)} />
           </div>
           <div>
             <Label>Opening Shares Outstanding</Label>
@@ -226,7 +227,7 @@ export default function EarningsPerSharePage() {
               {issuances.map((iss) => (
                 <TableRow key={iss.id}>
                   <TableCell>
-                    <Input type="date" value={iss.date} onChange={(e) => setIssuances((x) => x.map((r) => r.id === iss.id ? { ...r, date: e.target.value } : r))} />
+                    <DateInput  value={iss.date} onChange={(e) => setIssuances((x) => x.map((r) => r.id === iss.id ? { ...r, date: e.target.value } : r))} />
                   </TableCell>
                   <TableCell>
                     <Input type="number" value={iss.shares} onChange={(e) => setIssuances((x) => x.map((r) => r.id === iss.id ? { ...r, shares: Number(e.target.value) || 0 } : r))} />

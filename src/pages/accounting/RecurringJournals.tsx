@@ -4,6 +4,7 @@
 // are materialized into `journal_entries` + `journal_entry_lines` on demand
 // via "Post Now" or whenever `next_run_date` is <= today.
 
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -420,15 +421,15 @@ export default function RecurringJournalsPage() {
             </div>
             <div>
               <label className="text-xs text-muted-foreground">Start Date</label>
-              <Input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} />
+              <DateInput  value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} />
             </div>
             <div>
               <label className="text-xs text-muted-foreground">Next Run Date</label>
-              <Input type="date" value={form.next_run_date} onChange={e => setForm({ ...form, next_run_date: e.target.value })} />
+              <DateInput  value={form.next_run_date} onChange={e => setForm({ ...form, next_run_date: e.target.value })} />
             </div>
             <div>
               <label className="text-xs text-muted-foreground">End Date (optional)</label>
-              <Input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} />
+              <DateInput  value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} />
             </div>
             <div className="flex items-center gap-2 pt-6">
               <Switch checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />

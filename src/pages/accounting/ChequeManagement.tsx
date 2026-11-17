@@ -5,6 +5,7 @@
 //   2. Cheques      — issued/received cheques with lifecycle status:
 //                     Draft → Issued → Deposited → Cleared, or Bounced/Void.
 
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -436,8 +437,8 @@ export default function ChequeManagement() {
                       <SelectContent>{["EGP", "USD", "EUR", "GBP", "AED", "SAR"].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <div><Label>Issue Date</Label><Input type="date" value={chqForm.issue_date} onChange={(e) => setChqForm({ ...chqForm, issue_date: e.target.value })} /></div>
-                  <div><Label>Due Date</Label><Input type="date" value={chqForm.due_date} onChange={(e) => setChqForm({ ...chqForm, due_date: e.target.value })} /></div>
+                  <div><Label>Issue Date</Label><DateInput  value={chqForm.issue_date} onChange={(e) => setChqForm({ ...chqForm, issue_date: e.target.value })} /></div>
+                  <div><Label>Due Date</Label><DateInput  value={chqForm.due_date} onChange={(e) => setChqForm({ ...chqForm, due_date: e.target.value })} /></div>
                   <div className="col-span-2"><Label>Notes</Label><Textarea value={chqForm.notes} onChange={(e) => setChqForm({ ...chqForm, notes: e.target.value })} /></div>
                 </div>
                 <DialogFooter>

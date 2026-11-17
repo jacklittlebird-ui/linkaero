@@ -3,6 +3,7 @@
 // - Contract-driven invoice generation with per-template line items
 // - Dry-run preview before committing invoice creation
 // - Every run is logged with counts, totals, and per-template details
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -509,9 +510,9 @@ export default function RecurringInvoices() {
               </Select>
             </div>
             <div><Label>VAT %</Label><Input name="vat_rate" type="number" step="0.01" defaultValue="14" /></div>
-            <div><Label>Start Date</Label><Input name="start_date" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} /></div>
-            <div><Label>Next Run</Label><Input name="next_run_date" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} /></div>
-            <div><Label>End Date (optional)</Label><Input name="end_date" type="date" /></div>
+            <div><Label>Start Date</Label><DateInput name="start_date"  required defaultValue={new Date().toISOString().slice(0, 10)} /></div>
+            <div><Label>Next Run</Label><DateInput name="next_run_date"  required defaultValue={new Date().toISOString().slice(0, 10)} /></div>
+            <div><Label>End Date (optional)</Label><DateInput name="end_date"  /></div>
             <div className="col-span-2"><Label>Notes</Label><Textarea name="notes" /></div>
             <DialogFooter className="col-span-2">
               <Button type="button" variant="outline" onClick={() => setTplDialog(false)}>Cancel</Button>
@@ -579,7 +580,7 @@ export default function RecurringInvoices() {
           <div className="space-y-3">
             <div>
               <Label>As-of date</Label>
-              <Input type="date" value={runDialog?.asOf ?? ""} onChange={(e) => setRunDialog(runDialog ? { ...runDialog, asOf: e.target.value } : null)} />
+              <DateInput  value={runDialog?.asOf ?? ""} onChange={(e) => setRunDialog(runDialog ? { ...runDialog, asOf: e.target.value } : null)} />
               <p className="text-xs text-muted-foreground mt-1">
                 All active templates whose next-run date is on or before this date will be included.
               </p>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -112,7 +113,7 @@ export default function DeferredTaxPage() {
           <DialogContent>
             <DialogHeader><DialogTitle>New Deferred Tax Run</DialogTitle></DialogHeader>
             <form onSubmit={(e) => { e.preventDefault(); createRun(new FormData(e.currentTarget)); }} className="space-y-4">
-              <div><Label>Run Date</Label><Input type="date" name="run_date" defaultValue={new Date().toISOString().slice(0, 10)} required /></div>
+              <div><Label>Run Date</Label><DateInput  name="run_date" defaultValue={new Date().toISOString().slice(0, 10)} required /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Opening DTA</Label><Input type="number" step="0.01" name="opening_dta" defaultValue="0" /></div>
                 <div><Label>Opening DTL</Label><Input type="number" step="0.01" name="opening_dtl" defaultValue="0" /></div>

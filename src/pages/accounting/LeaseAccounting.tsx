@@ -1,4 +1,5 @@
 // Phase 3u: Lease Accounting (IFRS 16 / ASC 842)
+import { DateInput } from "@/components/ui/date-input";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -137,8 +138,8 @@ export default function LeaseAccounting() {
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>Start Date</Label><Input type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} /></div>
-              <div><Label>End Date</Label><Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
+              <div><Label>Start Date</Label><DateInput  value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} /></div>
+              <div><Label>End Date</Label><DateInput  value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></div>
               <div><Label>Term (months)</Label><Input type="number" value={form.term_months} onChange={(e) => setForm({ ...form, term_months: Number(e.target.value) })} /></div>
               <div><Label>Payment Amount</Label><Input type="number" value={form.payment_amount} onChange={(e) => setForm({ ...form, payment_amount: Number(e.target.value) })} /></div>
               <div><Label>Discount Rate %</Label><Input type="number" step="0.01" value={form.discount_rate_pct} onChange={(e) => setForm({ ...form, discount_rate_pct: Number(e.target.value) })} /></div>

@@ -5,6 +5,7 @@
 // then post a run for a period which generates a balanced journal entry
 // (Cr source account / Dr each target's account by its share).
 
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -548,7 +549,7 @@ export default function CostAllocationPage() {
               </Select>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <div><Label>Period (month)</Label><Input type="date" value={runForm.period} onChange={e => setRunForm({ ...runForm, period: e.target.value })} /></div>
+              <div><Label>Period (month)</Label><DateInput  value={runForm.period} onChange={e => setRunForm({ ...runForm, period: e.target.value })} /></div>
               <div><Label>Source Amount</Label><Input type="number" value={runForm.source_amount} onChange={e => setRunForm({ ...runForm, source_amount: Number(e.target.value) })} /></div>
               <div><Label>Currency</Label><Input value={runForm.currency} onChange={e => setRunForm({ ...runForm, currency: e.target.value })} /></div>
             </div>

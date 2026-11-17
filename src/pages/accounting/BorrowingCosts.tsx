@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -233,8 +234,8 @@ export default function BorrowingCostsPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div><Label>Asset Name</Label><Input value={r.asset.name} onChange={e => updateAsset(r.asset.id, { name: e.target.value })} /></div>
-              <div><Label>Capitalisation Start</Label><Input type="date" value={r.asset.startDate} onChange={e => updateAsset(r.asset.id, { startDate: e.target.value })} /></div>
-              <div><Label>End (ready for use)</Label><Input type="date" value={r.asset.endDate} onChange={e => updateAsset(r.asset.id, { endDate: e.target.value })} /></div>
+              <div><Label>Capitalisation Start</Label><DateInput  value={r.asset.startDate} onChange={e => updateAsset(r.asset.id, { startDate: e.target.value })} /></div>
+              <div><Label>End (ready for use)</Label><DateInput  value={r.asset.endDate} onChange={e => updateAsset(r.asset.id, { endDate: e.target.value })} /></div>
               <div><Label>Suspension Days (IAS 23.20)</Label><Input type="number" value={r.asset.suspensionDays} onChange={e => updateAsset(r.asset.id, { suspensionDays: +e.target.value })} /></div>
             </div>
 
@@ -275,7 +276,7 @@ export default function BorrowingCostsPage() {
                   <TableBody>
                     {r.asset.expenditures.map(e => (
                       <TableRow key={e.id}>
-                        <TableCell><Input type="date" value={e.date} onChange={ev => updateExpenditure(r.asset.id, e.id, { date: ev.target.value })} /></TableCell>
+                        <TableCell><DateInput  value={e.date} onChange={ev => updateExpenditure(r.asset.id, e.id, { date: ev.target.value })} /></TableCell>
                         <TableCell><Input type="number" value={e.amount} onChange={ev => updateExpenditure(r.asset.id, e.id, { amount: +ev.target.value })} /></TableCell>
                         <TableCell><Button variant="ghost" size="sm" onClick={() => removeExpenditure(r.asset.id, e.id)}><Trash2 className="h-4 w-4" /></Button></TableCell>
                       </TableRow>

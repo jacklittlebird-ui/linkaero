@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -154,8 +155,8 @@ export default function SalesCommissionsPage() {
             <CardHeader><CardTitle>Create Payout</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-5 gap-3">
               <div><Label>Salesperson ID</Label><Input value={payout.salesperson_id} onChange={(e) => setPayout({ ...payout, salesperson_id: e.target.value })} /></div>
-              <div><Label>Period Start</Label><Input type="date" value={payout.period_start} onChange={(e) => setPayout({ ...payout, period_start: e.target.value })} /></div>
-              <div><Label>Period End</Label><Input type="date" value={payout.period_end} onChange={(e) => setPayout({ ...payout, period_end: e.target.value })} /></div>
+              <div><Label>Period Start</Label><DateInput  value={payout.period_start} onChange={(e) => setPayout({ ...payout, period_start: e.target.value })} /></div>
+              <div><Label>Period End</Label><DateInput  value={payout.period_end} onChange={(e) => setPayout({ ...payout, period_end: e.target.value })} /></div>
               <div><Label>Currency</Label><Input value={payout.currency} onChange={(e) => setPayout({ ...payout, currency: e.target.value })} /></div>
               <div className="flex items-end"><Button onClick={createPayout}>Create Payout</Button></div>
             </CardContent>

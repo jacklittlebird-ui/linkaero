@@ -1,5 +1,6 @@
 // Phase 2p: Contracts & Renewals Center
 // - Lifecycle tracking, auto-renewal alerts, SLA compliance dashboard
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -596,7 +597,7 @@ export default function ContractsRenewals() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Incident Date</Label>
-                <Input type="date" value={incidentForm.incident_date}
+                <DateInput  value={incidentForm.incident_date}
                   onChange={(e) => setIncidentForm(f => ({ ...f, incident_date: e.target.value }))} />
               </div>
               <div>
@@ -664,12 +665,12 @@ export default function ContractsRenewals() {
               </div>
               <div>
                 <Label>Event Date</Label>
-                <Input type="date" value={renewForm.event_date}
+                <DateInput  value={renewForm.event_date}
                   onChange={(e) => setRenewForm(f => ({ ...f, event_date: e.target.value }))} />
               </div>
               <div className="col-span-2">
                 <Label>New End Date (renew / extend only)</Label>
-                <Input type="date" value={renewForm.new_end_date}
+                <DateInput  value={renewForm.new_end_date}
                   onChange={(e) => setRenewForm(f => ({ ...f, new_end_date: e.target.value }))} />
               </div>
             </div>

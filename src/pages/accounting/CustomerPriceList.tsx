@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { useTranslation } from "react-i18next";
 import { useSupabaseTable } from "@/hooks/useSupabaseQuery";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -162,9 +163,9 @@ export default function CustomerPriceListPage() {
                   <SelectContent>{UNITS.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
                 </Select></div>
               <div><label className="text-xs font-medium">{t("accounting.startDate")}</label>
-                <Input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} /></div>
+                <DateInput  value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} /></div>
               <div><label className="text-xs font-medium">{t("accounting.endDate")}</label>
-                <Input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} /></div>
+                <DateInput  value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} /></div>
               <div className="col-span-2"><label className="text-xs font-medium">Notes</label>
                 <Input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
               <div><label className="text-xs font-medium">{t("common.status")}</label>

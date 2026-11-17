@@ -12,6 +12,7 @@
 //   at the group level and the UI shows a small note explaining this.
 // - "Included" status = anything except Draft/Void/Cancelled.
 
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -202,11 +203,11 @@ export default function VatReturnPage() {
         <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-5 gap-3">
           <div>
             <label className="text-xs text-muted-foreground">From</label>
-            <Input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} />
+            <DateInput  value={fromDate} onChange={e => setFromDate(e.target.value)} />
           </div>
           <div>
             <label className="text-xs text-muted-foreground">To</label>
-            <Input type="date" value={toDate} onChange={e => setToDate(e.target.value)} />
+            <DateInput  value={toDate} onChange={e => setToDate(e.target.value)} />
           </div>
           <div>
             <label className="text-xs text-muted-foreground">Company</label>

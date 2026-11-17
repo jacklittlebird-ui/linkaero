@@ -5,6 +5,7 @@
 // - Dunning stages, promise-to-pay tracking, activity log
 // - Email-ready collection letter templates (mailto)
 // - Excel export
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -416,8 +417,8 @@ export default function CollectionsWorkflowPage() {
                 </div>
                 <div>
                   <Label>Promise-to-Pay Date</Label>
-                  <Input
-                    type="date"
+                  <DateInput
+                    
                     defaultValue={selectedCase.promise_to_pay_date || ""}
                     onBlur={(e) => updateCase.mutate({ id: selectedCase.id, patch: { promise_to_pay_date: e.target.value || null, status: e.target.value ? "promised" : selectedCase.status } })}
                   />
@@ -492,7 +493,7 @@ export default function CollectionsWorkflowPage() {
             </div>
             <div>
               <Label>Next Action Date</Label>
-              <Input type="date" value={activityDraft.next_action_date} onChange={(e) => setActivityDraft(s => ({ ...s, next_action_date: e.target.value }))} />
+              <DateInput  value={activityDraft.next_action_date} onChange={(e) => setActivityDraft(s => ({ ...s, next_action_date: e.target.value }))} />
             </div>
           </div>
           <DialogFooter>

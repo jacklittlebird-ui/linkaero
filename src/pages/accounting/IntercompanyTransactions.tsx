@@ -11,6 +11,7 @@
 // The exact CoA codes are looked up per-company by prefix and fall back to
 // creating a stub row when missing so the workflow never blocks.
 
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -322,7 +323,7 @@ export default function IntercompanyTransactionsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Date</Label>
-                  <Input type="date" value={form.transaction_date}
+                  <DateInput  value={form.transaction_date}
                     onChange={e => setForm(f => ({ ...f, transaction_date: e.target.value }))} />
                 </div>
                 <div>

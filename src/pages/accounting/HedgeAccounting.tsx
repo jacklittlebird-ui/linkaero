@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -248,8 +249,8 @@ export default function HedgeAccountingPage() {
                     <option value="net-investment">Net-investment hedge</option>
                   </select>
                 </div>
-                <div><Label>Inception</Label><Input type="date" value={r.inceptionDate} onChange={e => update(r.id, { inceptionDate: e.target.value })} /></div>
-                <div><Label>Maturity</Label><Input type="date" value={r.maturityDate} onChange={e => update(r.id, { maturityDate: e.target.value })} /></div>
+                <div><Label>Inception</Label><DateInput  value={r.inceptionDate} onChange={e => update(r.id, { inceptionDate: e.target.value })} /></div>
+                <div><Label>Maturity</Label><DateInput  value={r.maturityDate} onChange={e => update(r.id, { maturityDate: e.target.value })} /></div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3">

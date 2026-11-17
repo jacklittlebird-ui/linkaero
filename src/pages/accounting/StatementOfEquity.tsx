@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -154,8 +155,8 @@ export default function StatementOfEquityPage() {
 
       <Card>
         <CardContent className="pt-6 flex flex-wrap gap-4 items-end">
-          <div><Label>From</Label><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
-          <div><Label>To</Label><Input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>
+          <div><Label>From</Label><DateInput  value={from} onChange={(e) => setFrom(e.target.value)} /></div>
+          <div><Label>To</Label><DateInput  value={to} onChange={(e) => setTo(e.target.value)} /></div>
         </CardContent>
       </Card>
 

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -179,7 +180,7 @@ export default function InvestmentPropertyPage() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div><Label>Property Name</Label><Input value={p.name} onChange={e => update(p.id, { name: e.target.value })} /></div>
                 <div><Label>Location</Label><Input value={p.location} onChange={e => update(p.id, { location: e.target.value })} /></div>
-                <div><Label>Acquisition Date</Label><Input type="date" value={p.acquisitionDate} onChange={e => update(p.id, { acquisitionDate: e.target.value })} /></div>
+                <div><Label>Acquisition Date</Label><DateInput  value={p.acquisitionDate} onChange={e => update(p.id, { acquisitionDate: e.target.value })} /></div>
                 <div>
                   <Label>Measurement Model</Label>
                   <select

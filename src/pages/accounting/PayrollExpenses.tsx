@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -379,7 +380,7 @@ function ExpenseDialog({ open, onOpenChange, employees, onSaved }: { open: boole
             <Button size="sm" variant="outline" onClick={() => setLines([...lines, { line_date: new Date().toISOString().slice(0,10), category: "", description: "", amount: 0 }])}><Plus className="h-3 w-3 mr-1" />Add Line</Button></div>
           {lines.map((l, i) => (
             <div key={i} className="grid grid-cols-12 gap-2">
-              <Input type="date" className="col-span-3" value={l.line_date} onChange={e => { const c = [...lines]; c[i].line_date = e.target.value; setLines(c); }} />
+              <DateInput  className="col-span-3" value={l.line_date} onChange={e => { const c = [...lines]; c[i].line_date = e.target.value; setLines(c); }} />
               <Input className="col-span-3" placeholder="Category" value={l.category} onChange={e => { const c = [...lines]; c[i].category = e.target.value; setLines(c); }} />
               <Input className="col-span-4" placeholder="Description" value={l.description} onChange={e => { const c = [...lines]; c[i].description = e.target.value; setLines(c); }} />
               <Input type="number" className="col-span-2 text-right" value={l.amount} onChange={e => { const c = [...lines]; c[i].amount = +e.target.value; setLines(c); }} />

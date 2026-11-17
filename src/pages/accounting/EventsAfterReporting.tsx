@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -134,12 +135,12 @@ export default function EventsAfterReportingPage() {
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label>Reporting Date</Label>
-            <Input type="date" value={reportingDate} onChange={(e) => setReportingDate(e.target.value)} />
+            <DateInput  value={reportingDate} onChange={(e) => setReportingDate(e.target.value)} />
             <p className="text-xs text-muted-foreground mt-1">End of the reporting period</p>
           </div>
           <div>
             <Label>Authorisation for Issue</Label>
-            <Input type="date" value={authorisationDate} onChange={(e) => setAuthorisationDate(e.target.value)} />
+            <DateInput  value={authorisationDate} onChange={(e) => setAuthorisationDate(e.target.value)} />
             <p className="text-xs text-muted-foreground mt-1">Date financial statements are authorised for issue (IAS 10.17)</p>
           </div>
         </CardContent>
@@ -203,7 +204,7 @@ export default function EventsAfterReportingPage() {
                       <TableCell><Input value={e.title} onChange={(v) => update(e.id, { title: v.target.value })} placeholder="e.g. Customer bankruptcy" /></TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <Input type="date" className="w-36" value={e.eventDate} onChange={(v) => update(e.id, { eventDate: v.target.value })} />
+                          <DateInput  className="w-36" value={e.eventDate} onChange={(v) => update(e.id, { eventDate: v.target.value })} />
                           {!inWindow && <Badge variant="destructive">Out of window</Badge>}
                         </div>
                       </TableCell>

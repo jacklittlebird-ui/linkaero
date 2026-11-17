@@ -47,6 +47,7 @@ import { exportToExcel } from "@/lib/exportExcel";
 import { format } from "date-fns";
 import { Command, CommandInput, CommandItem, CommandList, CommandEmpty } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DateInput, CalendarButton } from "@/components/ui/date-input";
 import linkAeroLogo from "@/assets/linkaero-logo.png";
 import { ChevronsUpDown, Check, Pencil, Trash2 } from "lucide-react";
 import { filterTreasuryAccounts, selectTreasuryRate } from "@/lib/treasuryEntry";
@@ -1137,7 +1138,7 @@ export default function TreasuryVouchersPage() {
                 <div className="flex items-end gap-2">
                   <div>
                     <Label className="text-xs">Revaluation date</Label>
-                    <Input type="date" value={revalDate} onChange={(e) => setRevalDate(e.target.value)} className="w-44" />
+                    <DateInput  value={revalDate} onChange={(e) => setRevalDate(e.target.value)} className="w-44" />
                   </div>
                   <Button onClick={() => revalMutation.mutate(revalDate)} disabled={revalMutation.isPending}>
                     <RefreshCw className="h-4 w-4 mr-2" /> Run revaluation
@@ -1229,7 +1230,7 @@ export default function TreasuryVouchersPage() {
             </div>
             <div>
               <Label>تاريخ السند</Label>
-              <Input type="date" value={form.voucher_date} onChange={(e) => setForm({ ...form, voucher_date: e.target.value })} />
+              <DateInput  value={form.voucher_date} onChange={(e) => setForm({ ...form, voucher_date: e.target.value })} />
             </div>
             <div>
               <Label>الشركة</Label>
@@ -1321,8 +1322,11 @@ export default function TreasuryVouchersPage() {
                 </div>
                 <div>
                   <Label htmlFor="tv-flight-date">تاريخ الرحلة (DD/MM/YYYY)</Label>
-                  <Input id="tv-flight-date" value={form.flight_date} maxLength={10} inputMode="numeric"
+                  <div className="flex gap-1"><Input id="tv-flight-date" value={form.flight_date} maxLength={10} inputMode="numeric"
                     onChange={(e) => setForm({ ...form, flight_date: maskDMY(e.target.value) })} />
+                  <CalendarButton value={/^\d{2}\/\d{2}\/\d{4}$/.test(form.flight_date || "") ? form.flight_date!.split("/").reverse().join("-") : null}
+                    onPick={(iso) => setForm((f) => ({ ...f, flight_date: iso.split("-").reverse().join("/") }))} />
+                  </div>
                 </div>
               </>
             )}

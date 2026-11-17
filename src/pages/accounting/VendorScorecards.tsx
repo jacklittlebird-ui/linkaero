@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,8 +52,8 @@ export default function VendorScorecardsPage() {
         <CardHeader><CardTitle>New Scorecard</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div><Label>Vendor ID</Label><Input value={form.vendor_id} onChange={(e) => setForm({ ...form, vendor_id: e.target.value })} /></div>
-          <div><Label>Period Start</Label><Input type="date" value={form.period_start} onChange={(e) => setForm({ ...form, period_start: e.target.value })} /></div>
-          <div><Label>Period End</Label><Input type="date" value={form.period_end} onChange={(e) => setForm({ ...form, period_end: e.target.value })} /></div>
+          <div><Label>Period Start</Label><DateInput  value={form.period_start} onChange={(e) => setForm({ ...form, period_start: e.target.value })} /></div>
+          <div><Label>Period End</Label><DateInput  value={form.period_end} onChange={(e) => setForm({ ...form, period_end: e.target.value })} /></div>
           <div />
           {(["quality_score","delivery_score","price_score","compliance_score","communication_score"] as const).map(k => (
             <div key={k}>

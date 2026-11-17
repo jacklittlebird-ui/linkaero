@@ -5,6 +5,7 @@
 // - Overdue alerts and status KPIs
 // - e-Invoicing submission status per filing
 // - Excel export
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -476,9 +477,9 @@ function FilingDialog({ companies, onSave, saving }: { companies: any[]; onSave:
             </SelectContent>
           </Select>
         </div>
-        <div><Label>Period From</Label><Input type="date" value={form.period_from} onChange={(e) => setForm({ ...form, period_from: e.target.value })} /></div>
-        <div><Label>Period To</Label><Input type="date" value={form.period_to} onChange={(e) => setForm({ ...form, period_to: e.target.value })} /></div>
-        <div><Label>Due Date</Label><Input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} /></div>
+        <div><Label>Period From</Label><DateInput  value={form.period_from} onChange={(e) => setForm({ ...form, period_from: e.target.value })} /></div>
+        <div><Label>Period To</Label><DateInput  value={form.period_to} onChange={(e) => setForm({ ...form, period_to: e.target.value })} /></div>
+        <div><Label>Due Date</Label><DateInput  value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} /></div>
         <div><Label>Reference No</Label><Input value={form.reference_no} onChange={(e) => setForm({ ...form, reference_no: e.target.value })} /></div>
         <div><Label>Taxable Base</Label><Input type="number" step="0.01" value={form.taxable_base} onChange={(e) => setForm({ ...form, taxable_base: Number(e.target.value) })} /></div>
         <div><Label>Tax Amount</Label><Input type="number" step="0.01" value={form.tax_amount} onChange={(e) => setForm({ ...form, tax_amount: Number(e.target.value) })} /></div>
@@ -539,7 +540,7 @@ function EventDialog({ companies, onSave, saving }: { companies: any[]; onSave: 
             </SelectContent>
           </Select>
         </div>
-        <div><Label>Event Date</Label><Input type="date" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} /></div>
+        <div><Label>Event Date</Label><DateInput  value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} /></div>
         <div>
           <Label>Recurrence</Label>
           <Select value={form.recurrence} onValueChange={(v) => setForm({ ...form, recurrence: v })}>

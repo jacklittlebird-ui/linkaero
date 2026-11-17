@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -179,10 +180,10 @@ export default function ShareBasedPaymentsPage() {
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell><Input type="date" className="w-36" value={g.grantDate} onChange={(e) => update(g.id, { grantDate: e.target.value })} /></TableCell>
-                      <TableCell><Input type="date" className="w-36" value={g.vestingStart} onChange={(e) => update(g.id, { vestingStart: e.target.value })} /></TableCell>
-                      <TableCell><Input type="date" className="w-36" value={g.vestingEnd} onChange={(e) => update(g.id, { vestingEnd: e.target.value })} /></TableCell>
-                      <TableCell><Input type="date" className="w-36" value={g.reportingDate} onChange={(e) => update(g.id, { reportingDate: e.target.value })} /></TableCell>
+                      <TableCell><DateInput  className="w-36" value={g.grantDate} onChange={(e) => update(g.id, { grantDate: e.target.value })} /></TableCell>
+                      <TableCell><DateInput  className="w-36" value={g.vestingStart} onChange={(e) => update(g.id, { vestingStart: e.target.value })} /></TableCell>
+                      <TableCell><DateInput  className="w-36" value={g.vestingEnd} onChange={(e) => update(g.id, { vestingEnd: e.target.value })} /></TableCell>
+                      <TableCell><DateInput  className="w-36" value={g.reportingDate} onChange={(e) => update(g.id, { reportingDate: e.target.value })} /></TableCell>
                       <TableCell><Input type="number" className="w-24" value={g.numInstruments} onChange={(e) => update(g.id, { numInstruments: Number(e.target.value) || 0 })} /></TableCell>
                       <TableCell><Input type="number" step="0.01" className="w-24" value={g.fairValuePerUnit} onChange={(e) => update(g.id, { fairValuePerUnit: Number(e.target.value) || 0 })} /></TableCell>
                       <TableCell><Input type="number" step="0.01" min="0" max="1" className="w-20" value={g.expectedForfeitureRate} onChange={(e) => update(g.id, { expectedForfeitureRate: Math.min(1, Math.max(0, Number(e.target.value) || 0)) })} /></TableCell>

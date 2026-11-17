@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -335,7 +336,7 @@ export default function JournalEntriesPage() {
                   </div>
                   <div>
                     <label className="text-xs text-slate-600 mb-1 block">التاريخ</label>
-                    <Input type="date" value={form.entry_date} onChange={e => setForm({ ...form, entry_date: e.target.value })} className="bg-slate-50" />
+                    <DateInput  value={form.entry_date} onChange={e => setForm({ ...form, entry_date: e.target.value })} className="bg-slate-50" />
                   </div>
                 </div>
 

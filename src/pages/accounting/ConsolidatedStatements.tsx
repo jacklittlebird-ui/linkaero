@@ -5,6 +5,7 @@
 // zero-out revenue/expense pairs between selected companies when the paired
 // contra exists at the same code across entities.
 
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -207,11 +208,11 @@ export default function ConsolidatedStatementsPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <Label>From</Label>
-              <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+              <DateInput  value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
             </div>
             <div>
               <Label>To</Label>
-              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+              <DateInput  value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </div>
             <div>
               <Label>Inter-Company Code Prefixes</Label>

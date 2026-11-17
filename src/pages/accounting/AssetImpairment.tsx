@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -144,7 +145,7 @@ export default function AssetImpairmentPage() {
               </div>
               <div>
                 <Label>Test Date</Label>
-                <Input type="date" value={form.test_date} onChange={(e) => setForm({ ...form, test_date: e.target.value })} />
+                <DateInput  value={form.test_date} onChange={(e) => setForm({ ...form, test_date: e.target.value })} />
               </div>
               <div>
                 <Label>Carrying Amount</Label>

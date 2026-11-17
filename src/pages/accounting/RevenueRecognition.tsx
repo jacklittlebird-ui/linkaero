@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -175,7 +176,7 @@ export default function RevenueRecognitionPage() {
                   </div>
                   <div>
                     <Label>Contract Date</Label>
-                    <Input type="date" value={active.contractDate} onChange={(e) => updateActive({ contractDate: e.target.value })} />
+                    <DateInput  value={active.contractDate} onChange={(e) => updateActive({ contractDate: e.target.value })} />
                   </div>
                   <div>
                     <Label>Transaction Price</Label>

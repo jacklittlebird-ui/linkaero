@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -128,7 +129,7 @@ export default function TimesheetsPage() {
                 <DialogHeader><DialogTitle>New Timesheet</DialogTitle></DialogHeader>
                 <div className="space-y-3">
                   <div><Label>Employee</Label><Input value={newTs.employee_name} onChange={e => setNewTs({ ...newTs, employee_name: e.target.value })} /></div>
-                  <div><Label>Week Starting (Mon)</Label><Input type="date" value={newTs.week_start} onChange={e => setNewTs({ ...newTs, week_start: e.target.value })} /></div>
+                  <div><Label>Week Starting (Mon)</Label><DateInput  value={newTs.week_start} onChange={e => setNewTs({ ...newTs, week_start: e.target.value })} /></div>
                   <div><Label>Currency</Label><Input value={newTs.currency} onChange={e => setNewTs({ ...newTs, currency: e.target.value })} /></div>
                 </div>
                 <DialogFooter><Button onClick={createTs}>Create</Button></DialogFooter>
@@ -183,7 +184,7 @@ export default function TimesheetsPage() {
                 <TableBody>
                   {entries.map(e => (
                     <TableRow key={e.id}>
-                      <TableCell><Input type="date" value={e.entry_date} onChange={ev => updateEntry(e.id, { entry_date: ev.target.value })} /></TableCell>
+                      <TableCell><DateInput  value={e.entry_date} onChange={ev => updateEntry(e.id, { entry_date: ev.target.value })} /></TableCell>
                       <TableCell>
                         <Select value={e.project_id || ""} onValueChange={v => updateEntry(e.id, { project_id: v, task_id: null })}>
                           <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>

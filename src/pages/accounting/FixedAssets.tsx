@@ -1,6 +1,7 @@
 // Phase 1o — Fixed Assets & Depreciation
 // Asset register + monthly straight-line depreciation posting to journal_entries.
 
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -539,11 +540,11 @@ export default function FixedAssetsPage() {
               </div>
               <div>
                 <label className="text-xs">Purchase Date *</label>
-                <Input type="date" value={editing.purchase_date ?? ""} onChange={(e) => setEditing({ ...editing, purchase_date: e.target.value })} />
+                <DateInput  value={editing.purchase_date ?? ""} onChange={(e) => setEditing({ ...editing, purchase_date: e.target.value })} />
               </div>
               <div>
                 <label className="text-xs">In-Service Date</label>
-                <Input type="date" value={editing.in_service_date ?? ""} onChange={(e) => setEditing({ ...editing, in_service_date: e.target.value || null })} />
+                <DateInput  value={editing.in_service_date ?? ""} onChange={(e) => setEditing({ ...editing, in_service_date: e.target.value || null })} />
               </div>
               <div>
                 <label className="text-xs">Purchase Cost *</label>

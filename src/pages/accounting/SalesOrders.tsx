@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -358,7 +359,7 @@ export default function SalesOrders() {
             extraFields={<>
               <div>
                 <Label>Valid Until</Label>
-                <Input type="date" value={quote.valid_until || ""} onChange={(e) => setQuote({ ...quote, valid_until: e.target.value })} />
+                <DateInput  value={quote.valid_until || ""} onChange={(e) => setQuote({ ...quote, valid_until: e.target.value })} />
               </div>
             </>}
           />
@@ -386,7 +387,7 @@ export default function SalesOrders() {
             extraFields={<>
               <div>
                 <Label>Expected Delivery</Label>
-                <Input type="date" value={order.expected_delivery || ""} onChange={(e) => setOrder({ ...order, expected_delivery: e.target.value })} />
+                <DateInput  value={order.expected_delivery || ""} onChange={(e) => setOrder({ ...order, expected_delivery: e.target.value })} />
               </div>
             </>}
           />
@@ -421,7 +422,7 @@ function QuoteOrderForm({ header, setHeader, lines, setLines, airlines, statuses
         </div>
         <div>
           <Label>{dateLabel}</Label>
-          <Input type="date" value={header[dateKey] || ""} onChange={(e) => setHeader({ ...header, [dateKey]: e.target.value })} />
+          <DateInput  value={header[dateKey] || ""} onChange={(e) => setHeader({ ...header, [dateKey]: e.target.value })} />
         </div>
         {extraFields}
         <div>

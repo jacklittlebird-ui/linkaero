@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -143,8 +144,8 @@ export default function ProvisionsPage() {
                 </Select>
               </div>
               <div><Label>Currency</Label><Input name="currency" defaultValue="USD" /></div>
-              <div><Label>Recognition Date</Label><Input type="date" name="recognition_date" required /></div>
-              <div><Label>Expected Settlement Date</Label><Input type="date" name="expected_settlement_date" /></div>
+              <div><Label>Recognition Date</Label><DateInput  name="recognition_date" required /></div>
+              <div><Label>Expected Settlement Date</Label><DateInput  name="expected_settlement_date" /></div>
               <div><Label>Discount Rate (%)</Label><Input type="number" step="0.01" name="discount_rate" defaultValue="0" /></div>
               <div><Label>Opening Balance</Label><Input type="number" step="0.01" name="opening_balance" defaultValue="0" /></div>
               <div className="col-span-2"><Label>Description</Label><Textarea name="description" /></div>
@@ -228,7 +229,7 @@ export default function ProvisionsPage() {
                       onSubmit={(e) => { e.preventDefault(); addMovement(new FormData(e.currentTarget)); }}
                       className="grid gap-3"
                     >
-                      <div><Label>Date</Label><Input type="date" name="movement_date" required defaultValue={new Date().toISOString().slice(0, 10)} /></div>
+                      <div><Label>Date</Label><DateInput  name="movement_date" required defaultValue={new Date().toISOString().slice(0, 10)} /></div>
                       <div>
                         <Label>Type</Label>
                         <Select name="movement_type" defaultValue="addition">

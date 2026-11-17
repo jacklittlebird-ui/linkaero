@@ -169,6 +169,13 @@
       "when": 1794903692923,
       "tag": "0023_treasury_cost_centres_and_advance_cash_recovery",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794904613103,
+      "tag": "0024_cost_voucher_supplier_from_chart",
+      "breakpoints": true
     }
   ]
 }

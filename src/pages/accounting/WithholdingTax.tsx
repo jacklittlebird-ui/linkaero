@@ -5,6 +5,7 @@
 //   2. Certificates — issue & track WHT certificates for vendor payments/invoices;
 //                     auto-computes wht_amount and net_amount from rule rate.
 
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -371,7 +372,7 @@ export default function WithholdingTax() {
                 <DialogHeader><DialogTitle>Issue WHT Certificate</DialogTitle></DialogHeader>
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label>Certificate No.</Label><Input value={certForm.certificate_no} onChange={(e) => setCertForm({ ...certForm, certificate_no: e.target.value })} /></div>
-                  <div><Label>Issue Date</Label><Input type="date" value={certForm.issue_date} onChange={(e) => setCertForm({ ...certForm, issue_date: e.target.value })} /></div>
+                  <div><Label>Issue Date</Label><DateInput  value={certForm.issue_date} onChange={(e) => setCertForm({ ...certForm, issue_date: e.target.value })} /></div>
                   <div><Label>Vendor Name</Label><Input value={certForm.vendor_name} onChange={(e) => setCertForm({ ...certForm, vendor_name: e.target.value })} /></div>
                   <div><Label>Vendor Tax ID</Label><Input value={certForm.vendor_tax_id} onChange={(e) => setCertForm({ ...certForm, vendor_tax_id: e.target.value })} /></div>
                   <div className="col-span-2"><Label>WHT Rule</Label>

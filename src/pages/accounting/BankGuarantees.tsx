@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -143,8 +144,8 @@ export default function BankGuaranteesPage() {
                 <div><Label>Beneficiary</Label><Input value={form.beneficiary} onChange={e => setForm({ ...form, beneficiary: e.target.value })} /></div>
                 <div><Label>Amount</Label><Input type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} /></div>
                 <div><Label>Currency</Label><Input value={form.currency} onChange={e => setForm({ ...form, currency: e.target.value })} /></div>
-                <div><Label>Issue Date</Label><Input type="date" value={form.issue_date} onChange={e => setForm({ ...form, issue_date: e.target.value })} /></div>
-                <div><Label>Expiry Date</Label><Input type="date" value={form.expiry_date} onChange={e => setForm({ ...form, expiry_date: e.target.value })} /></div>
+                <div><Label>Issue Date</Label><DateInput  value={form.issue_date} onChange={e => setForm({ ...form, issue_date: e.target.value })} /></div>
+                <div><Label>Expiry Date</Label><DateInput  value={form.expiry_date} onChange={e => setForm({ ...form, expiry_date: e.target.value })} /></div>
                 <div><Label>Margin Held</Label><Input type="number" value={form.margin_held} onChange={e => setForm({ ...form, margin_held: e.target.value })} /></div>
                 <div><Label>Commission Rate (%)</Label><Input type="number" step="0.01" value={form.commission_rate} onChange={e => setForm({ ...form, commission_rate: e.target.value })} /></div>
                 <div className="col-span-2"><Label>Purpose</Label><Textarea value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })} /></div>
@@ -224,9 +225,9 @@ export default function BankGuaranteesPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div><Label>Event Date</Label><Input type="date" value={ev.event_date} onChange={e => setEv({ ...ev, event_date: e.target.value })} /></div>
+                  <div><Label>Event Date</Label><DateInput  value={ev.event_date} onChange={e => setEv({ ...ev, event_date: e.target.value })} /></div>
                   {ev.event_type === "amended" && <div><Label>Amount Delta (±)</Label><Input type="number" value={ev.amount_delta} onChange={e => setEv({ ...ev, amount_delta: e.target.value })} /></div>}
-                  {ev.event_type === "extended" && <div><Label>New Expiry Date</Label><Input type="date" value={ev.new_expiry_date} onChange={e => setEv({ ...ev, new_expiry_date: e.target.value })} /></div>}
+                  {ev.event_type === "extended" && <div><Label>New Expiry Date</Label><DateInput  value={ev.new_expiry_date} onChange={e => setEv({ ...ev, new_expiry_date: e.target.value })} /></div>}
                   <div><Label>Notes</Label><Textarea value={ev.notes} onChange={e => setEv({ ...ev, notes: e.target.value })} /></div>
                 </div>
                 <Button onClick={() => recordEvent.mutate()} disabled={recordEvent.isPending}>

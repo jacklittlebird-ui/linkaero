@@ -12,6 +12,7 @@
 // activity with a running balance. Aging buckets are computed from the
 // remaining open document balances as of the To date.
 
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -353,11 +354,11 @@ export default function PartnerStatements() {
               </div>
               <div className="space-y-1">
                 <Label>From</Label>
-                <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+                <DateInput  value={from} onChange={(e) => setFrom(e.target.value)} />
               </div>
               <div className="space-y-1">
                 <Label>To</Label>
-                <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+                <DateInput  value={to} onChange={(e) => setTo(e.target.value)} />
               </div>
             </CardContent>
           </Card>

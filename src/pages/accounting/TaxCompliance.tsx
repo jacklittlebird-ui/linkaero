@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -374,8 +375,8 @@ function WhtTab() {
         <CardHeader><CardTitle>Withholding Tax Summary</CardTitle></CardHeader>
         <CardContent>
           <div className="flex items-end gap-3 mb-4">
-            <div><Label>From</Label><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-44" /></div>
-            <div><Label>To</Label><Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-44" /></div>
+            <div><Label>From</Label><DateInput  value={from} onChange={(e) => setFrom(e.target.value)} className="w-44" /></div>
+            <div><Label>To</Label><DateInput  value={to} onChange={(e) => setTo(e.target.value)} className="w-44" /></div>
             <Button onClick={() => refetch()} disabled={isFetching}>
               <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />Refresh
             </Button>

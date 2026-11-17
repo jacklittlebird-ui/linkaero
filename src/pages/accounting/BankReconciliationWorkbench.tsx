@@ -6,6 +6,7 @@
 // - One-click match flags a ledger entry with the current reconciliation_id.
 // - Recalc button calls recalc_bank_reconciliation(_id) RPC.
 
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -302,7 +303,7 @@ export default function BankReconciliationPage() {
           </div>
           <div>
             <Label>Statement Date</Label>
-            <Input type="date" value={statementDate} onChange={(e) => setStatementDate(e.target.value)} />
+            <DateInput  value={statementDate} onChange={(e) => setStatementDate(e.target.value)} />
           </div>
           <div>
             <Label>Statement Balance</Label>

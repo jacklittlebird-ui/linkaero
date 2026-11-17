@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -201,7 +202,7 @@ export default function AccountingPoliciesChangesPage() {
                         </div>
                       </TableCell>
                       <TableCell><Input className="w-28" value={e.standardRef} onChange={(v) => update(e.id, { standardRef: v.target.value })} placeholder="IFRS 16" /></TableCell>
-                      <TableCell><Input type="date" className="w-36" value={e.effectiveDate} onChange={(v) => update(e.id, { effectiveDate: v.target.value })} /></TableCell>
+                      <TableCell><DateInput  className="w-36" value={e.effectiveDate} onChange={(v) => update(e.id, { effectiveDate: v.target.value })} /></TableCell>
                       <TableCell>
                         <Select value={e.materiality} onValueChange={(v) => update(e.id, { materiality: v as MaterialityLevel })}>
                           <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>

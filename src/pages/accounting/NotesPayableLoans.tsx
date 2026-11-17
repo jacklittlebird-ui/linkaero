@@ -7,6 +7,7 @@
 //                       Lifecycle: Draft → Requested → Approved → Disbursed → Settled,
 //                       or Rejected. Tracks installments (paid vs total).
 
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -374,11 +375,11 @@ export default function NotesPayableLoans() {
                   </div>
                   <div>
                     <Label>Cheque Date</Label>
-                    <Input type="date" value={noteForm.cheque_date} onChange={(e) => setNoteForm({ ...noteForm, cheque_date: e.target.value })} />
+                    <DateInput  value={noteForm.cheque_date} onChange={(e) => setNoteForm({ ...noteForm, cheque_date: e.target.value })} />
                   </div>
                   <div>
                     <Label>Clearance Date</Label>
-                    <Input type="date" value={noteForm.clearance_date} onChange={(e) => setNoteForm({ ...noteForm, clearance_date: e.target.value })} />
+                    <DateInput  value={noteForm.clearance_date} onChange={(e) => setNoteForm({ ...noteForm, clearance_date: e.target.value })} />
                   </div>
                   <div>
                     <Label>Supplier Name</Label>
@@ -513,7 +514,7 @@ export default function NotesPayableLoans() {
                   </div>
                   <div>
                     <Label>Request Date</Label>
-                    <Input type="date" value={loanForm.request_date} onChange={(e) => setLoanForm({ ...loanForm, request_date: e.target.value })} />
+                    <DateInput  value={loanForm.request_date} onChange={(e) => setLoanForm({ ...loanForm, request_date: e.target.value })} />
                   </div>
                   <div>
                     <Label>Employee Name</Label>

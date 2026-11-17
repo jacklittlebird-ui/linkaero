@@ -14,3 +14,4 @@
 - [x] Block vouchers when cash box / bank has no linked chart account
 - [x] Chart of accounts: new account must have a parent (inherits type, level)
 - [x] Income statement: Revenue, Direct costs, Station costs, Gross profit, G&A, Other items, Net profit
+- [x] Calendar picker on every date field in accounting/treasury tabs

@@ -4,6 +4,7 @@
 // filtering by entity, actor, action, and date range. Row expansion
 // shows a before/after JSON diff.
 
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -233,11 +234,11 @@ export default function AuditLogPage() {
           </div>
           <div>
             <Label>From</Label>
-            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+            <DateInput  value={from} onChange={(e) => setFrom(e.target.value)} />
           </div>
           <div>
             <Label>To</Label>
-            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+            <DateInput  value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
         </CardContent>
       </Card>

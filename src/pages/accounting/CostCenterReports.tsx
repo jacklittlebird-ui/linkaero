@@ -4,6 +4,7 @@
 // derived from 4xxx accounts (credit − debit), expenses from 5xxx accounts
 // (debit − credit). Profit = revenue − expenses.
 
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -163,11 +164,11 @@ export default function CostCenterReportsPage() {
           </div>
           <div>
             <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">From</label>
-            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-full border border-input rounded-md h-10 px-3 text-sm bg-background" />
+            <DateInput  value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-full border border-input rounded-md h-10 px-3 text-sm bg-background" />
           </div>
           <div>
             <label className="text-xs font-semibold text-muted-foreground uppercase mb-1 block">To</label>
-            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-full border border-input rounded-md h-10 px-3 text-sm bg-background" />
+            <DateInput  value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-full border border-input rounded-md h-10 px-3 text-sm bg-background" />
           </div>
         </CardContent>
       </Card>

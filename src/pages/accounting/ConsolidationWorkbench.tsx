@@ -5,6 +5,7 @@
 // - Track elimination entries (IC AR/AP, revenue/expense, investment/equity)
 // - Non-controlling (minority) interest table per subsidiary
 // - Consolidated summary view
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -410,8 +411,8 @@ export default function ConsolidationWorkbenchPage() {
           <DialogHeader><DialogTitle>New Consolidation Run</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div><Label>Run Number</Label><Input value={newRun.run_no} onChange={(e) => setNewRun(s => ({ ...s, run_no: e.target.value }))} placeholder="Auto if blank" /></div>
-            <div><Label>Period Start</Label><Input type="date" value={newRun.period_start} onChange={(e) => setNewRun(s => ({ ...s, period_start: e.target.value }))} /></div>
-            <div><Label>Period End</Label><Input type="date" value={newRun.period_end} onChange={(e) => setNewRun(s => ({ ...s, period_end: e.target.value }))} /></div>
+            <div><Label>Period Start</Label><DateInput  value={newRun.period_start} onChange={(e) => setNewRun(s => ({ ...s, period_start: e.target.value }))} /></div>
+            <div><Label>Period End</Label><DateInput  value={newRun.period_end} onChange={(e) => setNewRun(s => ({ ...s, period_end: e.target.value }))} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>

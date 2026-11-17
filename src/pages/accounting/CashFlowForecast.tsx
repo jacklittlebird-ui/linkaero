@@ -1,4 +1,5 @@
 // Phase 3v: 13-Week Rolling Cash Flow Forecast
+import { DateInput } from "@/components/ui/date-input";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -78,7 +79,7 @@ export default function CashFlowForecast() {
             <DialogHeader><DialogTitle>Create Forecast</DialogTitle></DialogHeader>
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2"><Label>Forecast No.</Label><Input value={form.forecast_no} onChange={(e) => setForm({ ...form, forecast_no: e.target.value })} /></div>
-              <div><Label>As of Date</Label><Input type="date" value={form.as_of_date} onChange={(e) => setForm({ ...form, as_of_date: e.target.value })} /></div>
+              <div><Label>As of Date</Label><DateInput  value={form.as_of_date} onChange={(e) => setForm({ ...form, as_of_date: e.target.value })} /></div>
               <div><Label>Horizon (weeks)</Label><Input type="number" value={form.horizon_weeks} onChange={(e) => setForm({ ...form, horizon_weeks: Number(e.target.value) })} /></div>
               <div><Label>Base Currency</Label><Input value={form.base_currency} onChange={(e) => setForm({ ...form, base_currency: e.target.value })} /></div>
               <div><Label>Opening Cash</Label><Input type="number" value={form.opening_cash} onChange={(e) => setForm({ ...form, opening_cash: Number(e.target.value) })} /></div>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -153,8 +154,8 @@ export default function ProjectCostingPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div><Label>Start</Label><Input type="date" value={prjForm.start_date || ""} onChange={e => setPrjForm({ ...prjForm, start_date: e.target.value })} /></div>
-                  <div><Label>End</Label><Input type="date" value={prjForm.end_date || ""} onChange={e => setPrjForm({ ...prjForm, end_date: e.target.value })} /></div>
+                  <div><Label>Start</Label><DateInput  value={prjForm.start_date || ""} onChange={e => setPrjForm({ ...prjForm, start_date: e.target.value })} /></div>
+                  <div><Label>End</Label><DateInput  value={prjForm.end_date || ""} onChange={e => setPrjForm({ ...prjForm, end_date: e.target.value })} /></div>
                   <div className="col-span-2"><Label>Notes</Label><Textarea value={prjForm.notes || ""} onChange={e => setPrjForm({ ...prjForm, notes: e.target.value })} /></div>
                 </div>
                 <DialogFooter><Button onClick={saveProject}>Save</Button></DialogFooter>
@@ -262,7 +263,7 @@ export default function ProjectCostingPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div><Label>Date</Label><Input type="date" value={txnForm.txn_date} onChange={e => setTxnForm({ ...txnForm, txn_date: e.target.value })} /></div>
+                  <div><Label>Date</Label><DateInput  value={txnForm.txn_date} onChange={e => setTxnForm({ ...txnForm, txn_date: e.target.value })} /></div>
                   <div><Label>Amount</Label><Input type="number" value={txnForm.amount} onChange={e => setTxnForm({ ...txnForm, amount: Number(e.target.value) })} /></div>
                   <div><Label>Currency</Label><Input value={txnForm.currency} onChange={e => setTxnForm({ ...txnForm, currency: e.target.value })} /></div>
                   <div className="col-span-2"><Label>Description</Label><Input value={txnForm.description || ""} onChange={e => setTxnForm({ ...txnForm, description: e.target.value })} /></div>

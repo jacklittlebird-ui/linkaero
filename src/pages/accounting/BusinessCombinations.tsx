@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -206,7 +207,7 @@ export default function BusinessCombinationsPage() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div><Label>Acquirer</Label><Input value={c.acquirerName} onChange={e => update(c.id, { acquirerName: e.target.value })} /></div>
                 <div><Label>Acquiree</Label><Input value={c.acquireeName} onChange={e => update(c.id, { acquireeName: e.target.value })} /></div>
-                <div><Label>Acquisition Date</Label><Input type="date" value={c.acquisitionDate} onChange={e => update(c.id, { acquisitionDate: e.target.value })} /></div>
+                <div><Label>Acquisition Date</Label><DateInput  value={c.acquisitionDate} onChange={e => update(c.id, { acquisitionDate: e.target.value })} /></div>
                 <div><Label>Ownership %</Label><Input type="number" value={c.ownershipPct} onChange={e => update(c.id, { ownershipPct: +e.target.value })} /></div>
               </div>
 

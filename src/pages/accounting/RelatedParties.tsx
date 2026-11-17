@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -278,7 +279,7 @@ export default function RelatedPartiesPage() {
                         <SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
-                    <div><Label>Date</Label><Input type="date" value={tForm.transaction_date} onChange={(e) => setTForm({ ...tForm, transaction_date: e.target.value })} /></div>
+                    <div><Label>Date</Label><DateInput  value={tForm.transaction_date} onChange={(e) => setTForm({ ...tForm, transaction_date: e.target.value })} /></div>
                     <div><Label>Type</Label>
                       <Select value={tForm.transaction_type} onValueChange={(v) => setTForm({ ...tForm, transaction_type: v })}>
                         <SelectTrigger><SelectValue /></SelectTrigger>

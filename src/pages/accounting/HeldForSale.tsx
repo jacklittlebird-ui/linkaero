@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -227,8 +228,8 @@ export default function HeldForSalePage() {
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell><Input type="date" className="w-36" value={i.classificationDate} onChange={(e) => update(i.id, { classificationDate: e.target.value })} /></TableCell>
-                      <TableCell><Input type="date" className="w-36" value={i.expectedSaleDate} onChange={(e) => update(i.id, { expectedSaleDate: e.target.value })} /></TableCell>
+                      <TableCell><DateInput  className="w-36" value={i.classificationDate} onChange={(e) => update(i.id, { classificationDate: e.target.value })} /></TableCell>
+                      <TableCell><DateInput  className="w-36" value={i.expectedSaleDate} onChange={(e) => update(i.id, { expectedSaleDate: e.target.value })} /></TableCell>
                       <TableCell><Input type="number" className="w-28" value={i.carryingAmount} onChange={(e) => update(i.id, { carryingAmount: Number(e.target.value) || 0 })} /></TableCell>
                       <TableCell><Input type="number" className="w-28" value={i.fairValue} onChange={(e) => update(i.id, { fairValue: Number(e.target.value) || 0 })} /></TableCell>
                       <TableCell><Input type="number" className="w-24" value={i.costsToSell} onChange={(e) => update(i.id, { costsToSell: Number(e.target.value) || 0 })} /></TableCell>

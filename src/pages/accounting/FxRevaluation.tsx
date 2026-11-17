@@ -10,6 +10,7 @@
 //   AP (liability)  : new_base > old_base  ⇒ unrealized LOSS   (Dr Loss / Cr AP)
 // (inverse for a drop in rate)
 
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -248,7 +249,7 @@ export default function FxRevaluationPage() {
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">As of</span>
-            <Input type="date" value={asOf} onChange={e => setAsOf(e.target.value)} className="w-40" />
+            <DateInput  value={asOf} onChange={e => setAsOf(e.target.value)} className="w-40" />
           </div>
           <Select value={baseCurrency} onValueChange={setBaseCurrency}>
             <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>

@@ -7,6 +7,7 @@
 //      lifecycle: Sent → Under Negotiation → Resolved / Escalated / Frozen.
 //      Freezing payment blocks disbursement until resolved.
 
+import { DateInput } from "@/components/ui/date-input";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -673,8 +674,8 @@ function NewLetterDialog({
           </div>
           <div>
             <Label>Flight Date</Label>
-            <Input
-              type="date"
+            <DateInput
+              
               value={form.flight_date}
               onChange={(e) => setForm({ ...form, flight_date: e.target.value })}
             />

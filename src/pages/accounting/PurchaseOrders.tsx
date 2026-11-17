@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -314,7 +315,7 @@ export default function PurchaseOrders() {
           <div className="grid grid-cols-2 gap-4">
             <div><Label>Department</Label><Input value={reqForm.department} onChange={(e) => setReqForm({ ...reqForm, department: e.target.value })} /></div>
             <div><Label>Requested By</Label><Input value={reqForm.requested_by} onChange={(e) => setReqForm({ ...reqForm, requested_by: e.target.value })} /></div>
-            <div><Label>Needed By</Label><Input type="date" value={reqForm.needed_by} onChange={(e) => setReqForm({ ...reqForm, needed_by: e.target.value })} /></div>
+            <div><Label>Needed By</Label><DateInput  value={reqForm.needed_by} onChange={(e) => setReqForm({ ...reqForm, needed_by: e.target.value })} /></div>
             <div><Label>Currency</Label>
               <Select value={reqForm.currency} onValueChange={(v) => setReqForm({ ...reqForm, currency: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -338,8 +339,8 @@ export default function PurchaseOrders() {
           <div className="grid grid-cols-2 gap-4">
             <div><Label>Vendor</Label><Input value={poForm.vendor_name} onChange={(e) => setPoForm({ ...poForm, vendor_name: e.target.value })} /></div>
             <div><Label>Payment Terms</Label><Input value={poForm.payment_terms} onChange={(e) => setPoForm({ ...poForm, payment_terms: e.target.value })} /></div>
-            <div><Label>Order Date</Label><Input type="date" value={poForm.order_date} onChange={(e) => setPoForm({ ...poForm, order_date: e.target.value })} /></div>
-            <div><Label>Expected Delivery</Label><Input type="date" value={poForm.expected_delivery} onChange={(e) => setPoForm({ ...poForm, expected_delivery: e.target.value })} /></div>
+            <div><Label>Order Date</Label><DateInput  value={poForm.order_date} onChange={(e) => setPoForm({ ...poForm, order_date: e.target.value })} /></div>
+            <div><Label>Expected Delivery</Label><DateInput  value={poForm.expected_delivery} onChange={(e) => setPoForm({ ...poForm, expected_delivery: e.target.value })} /></div>
             <div><Label>Currency</Label>
               <Select value={poForm.currency} onValueChange={(v) => setPoForm({ ...poForm, currency: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>

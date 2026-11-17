@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -165,8 +166,8 @@ export default function LoanAmortizationPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>Start Date</Label><Input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} /></div>
-              <div><Label>First Payment Date</Label><Input type="date" value={form.first_payment_date} onChange={e => setForm({ ...form, first_payment_date: e.target.value })} /></div>
+              <div><Label>Start Date</Label><DateInput  value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} /></div>
+              <div><Label>First Payment Date</Label><DateInput  value={form.first_payment_date} onChange={e => setForm({ ...form, first_payment_date: e.target.value })} /></div>
             </div>
             <Button onClick={() => createLoan.mutate()} disabled={createLoan.isPending}>
               {createLoan.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Create Loan

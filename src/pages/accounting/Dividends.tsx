@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -134,9 +135,9 @@ export default function DividendsPage() {
                 <div><Label>Fiscal Year</Label><Input type="number" name="fiscal_year" defaultValue={new Date().getFullYear() - 1} required /></div>
               </div>
               <div className="grid grid-cols-3 gap-3">
-                <div><Label>Declaration Date</Label><Input type="date" name="declaration_date" defaultValue={new Date().toISOString().slice(0,10)} required /></div>
-                <div><Label>Record Date</Label><Input type="date" name="record_date" /></div>
-                <div><Label>Payment Date</Label><Input type="date" name="payment_date" /></div>
+                <div><Label>Declaration Date</Label><DateInput  name="declaration_date" defaultValue={new Date().toISOString().slice(0,10)} required /></div>
+                <div><Label>Record Date</Label><DateInput  name="record_date" /></div>
+                <div><Label>Payment Date</Label><DateInput  name="payment_date" /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Type</Label>
@@ -230,7 +231,7 @@ export default function DividendsPage() {
                           <div><Label>Gross Amount</Label><Input type="number" step="0.01" name="gross_amount" required /></div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
-                          <div><Label>Payment Date</Label><Input type="date" name="payment_date" /></div>
+                          <div><Label>Payment Date</Label><DateInput  name="payment_date" /></div>
                           <div><Label>Reference</Label><Input name="payment_reference" /></div>
                         </div>
                         <div><Label>Status</Label>

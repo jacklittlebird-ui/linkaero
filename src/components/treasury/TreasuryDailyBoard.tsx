@@ -11,6 +11,7 @@ import { exportToExcel } from "@/lib/exportExcel";
 import { printRtlReport } from "@/lib/printTable";
 import { computeRange, isPending, isAdvance, isCustody, advanceRemaining, TVoucher } from "@/lib/treasuryBalance";
 import { useAuth } from "@/contexts/AuthContext";
+import { CalendarButton } from "@/components/ui/date-input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -134,11 +135,13 @@ export default function TreasuryDailyBoard() {
       <div className="flex flex-wrap items-end gap-4">
         <div>
           <Label htmlFor="tb-from">من تاريخ (DD/MM/YYYY)</Label>
-          <Input id="tb-from" value={fromText} maxLength={10} className="w-36" onChange={(e) => setFromText(mask(e.target.value))} />
+          <div className="flex gap-1"><Input id="tb-from" value={fromText} maxLength={10} className="w-36" onChange={(e) => setFromText(mask(e.target.value))} />
+          <CalendarButton value={fromDMY(fromText)} onPick={(iso) => setFromText(toDMY(iso))} /></div>
         </div>
         <div>
           <Label htmlFor="tb-to">إلى تاريخ (DD/MM/YYYY)</Label>
-          <Input id="tb-to" value={toText} maxLength={10} className="w-36" onChange={(e) => setToText(mask(e.target.value))} />
+          <div className="flex gap-1"><Input id="tb-to" value={toText} maxLength={10} className="w-36" onChange={(e) => setToText(mask(e.target.value))} />
+          <CalendarButton value={fromDMY(toText)} onPick={(iso) => setToText(toDMY(iso))} /></div>
         </div>
         <div>
           <Label>العملة</Label>

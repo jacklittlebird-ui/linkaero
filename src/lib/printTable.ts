@@ -17,7 +17,7 @@ export function printRtlReport(opts: { title: string; subtitle?: string; summary
     table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #e5e7eb;padding:6px;text-align:right}
     th{background:#1e3a5f;color:#fff}tfoot td{font-weight:bold;background:#f1f5f9}
     h2{font-size:16px} section{margin-top:24px} thead{display:table-header-group} tr{break-inside:avoid}
-    @media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}section{break-before:page}}
+    @media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}section{break-before:auto}}
   </style></head><body>
   <div class="head"><div><h1>${esc(opts.title)}</h1><div>${esc(opts.subtitle ?? "")}</div></div><img src="${window.location.origin}${linkAeroLogo}" /></div>
   <div class="sum">${summary}</div>

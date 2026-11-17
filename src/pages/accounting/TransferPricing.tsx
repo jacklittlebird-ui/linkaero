@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -194,7 +195,7 @@ export default function TransferPricingPage() {
                     <DialogContent>
                       <DialogHeader><DialogTitle>Year-End True-Up Adjustment</DialogTitle></DialogHeader>
                       <form onSubmit={(e) => { e.preventDefault(); addAdjustment(new FormData(e.currentTarget)); }} className="space-y-3">
-                        <div><Label>Date</Label><Input type="date" name="adjustment_date" defaultValue={new Date().toISOString().slice(0, 10)} required /></div>
+                        <div><Label>Date</Label><DateInput  name="adjustment_date" defaultValue={new Date().toISOString().slice(0, 10)} required /></div>
                         <div><Label>Amount</Label><Input type="number" step="0.01" name="adjustment_amount" required /></div>
                         <div><Label>Direction</Label>
                           <Select name="direction" defaultValue="increase">

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DateInput } from "@/components/ui/date-input";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -118,8 +119,8 @@ export default function PurchaseApprovalMatrixPage() {
             <CardContent className="grid grid-cols-1 md:grid-cols-5 gap-3">
               <div><Label>From User ID</Label><Input value={deleg.from_user_id} onChange={(e) => setDeleg({ ...deleg, from_user_id: e.target.value })} /></div>
               <div><Label>To User ID</Label><Input value={deleg.to_user_id} onChange={(e) => setDeleg({ ...deleg, to_user_id: e.target.value })} /></div>
-              <div><Label>Start Date</Label><Input type="date" value={deleg.start_date} onChange={(e) => setDeleg({ ...deleg, start_date: e.target.value })} /></div>
-              <div><Label>End Date</Label><Input type="date" value={deleg.end_date} onChange={(e) => setDeleg({ ...deleg, end_date: e.target.value })} /></div>
+              <div><Label>Start Date</Label><DateInput  value={deleg.start_date} onChange={(e) => setDeleg({ ...deleg, start_date: e.target.value })} /></div>
+              <div><Label>End Date</Label><DateInput  value={deleg.end_date} onChange={(e) => setDeleg({ ...deleg, end_date: e.target.value })} /></div>
               <div><Label>Reason</Label><Input value={deleg.reason} onChange={(e) => setDeleg({ ...deleg, reason: e.target.value })} /></div>
               <div className="md:col-span-5"><Button onClick={addDeleg}>Add Delegation</Button></div>
             </CardContent>
