@@ -162,8 +162,8 @@ export default function TreasuryDailyBoard() {
         {pill(`إجمالي وارد ${fmt(day.receipts)}`, "bg-success/10 text-success")}<span>−</span>
         {pill(`إجمالي منصرف ${fmt(day.payments)}`, "bg-destructive/10 text-destructive")}<span>=</span>
         {pill(`رصيد كاش ${fmt(day.cash)}`, "bg-success/10 text-success")}<span>−</span>
-        {pill(`معلقات ${fmt(day.pending)}`, "bg-warning/10 text-warning")}<span>=</span>
-        {pill(`السلف ${fmt(day.advances)}`, "bg-warning/10 text-warning")}<span>−</span>
+        {pill(`معلقات ${fmt(day.pending)}`, "bg-warning/10 text-warning")}<span>−</span>
+        {pill(`السلف ${fmt(day.advances)}`, "bg-warning/10 text-warning")}<span>=</span>
         {pill(`الرصيد النهائي ${fmt(day.final)}`, "bg-primary text-primary-foreground")}
       </div>
       <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm text-primary">
@@ -214,7 +214,7 @@ export default function TreasuryDailyBoard() {
           </div>
           <div className="grid grid-cols-3 bg-primary p-4 text-center text-primary-foreground">
             <div><div className="text-xs opacity-80">رصيد أول + وارد − منصرف</div><div className="font-bold">{fmt(day.cash)}</div></div>
-            <div><div className="text-xs opacity-80">− معلقات</div><div className="font-bold text-warning">{fmt(day.pending)}</div></div>
+            <div><div className="text-xs opacity-80">− معلقات / سلف</div><div className="font-bold text-warning">{fmt(day.pending)} / {fmt(day.advances)}</div></div>
             <div><div className="text-xs opacity-80">الرصيد الفعلي</div><div className="font-bold">{fmt(day.final)}</div></div>
           </div>
         </CardContent>
