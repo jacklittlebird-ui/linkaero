@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { DateInput } from "@/components/ui/date-input";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -127,11 +128,38 @@ export default function JournalEntriesPage() {
   const [editEntry, setEditEntry] = useState<JournalEntry | null>(null);
   const [lines, setLines] = useState<Partial<JournalLine>[]>([{ account_id: "", debit: 0, credit: 0, description: "" }]);
   const [form, setForm] = useState({ entry_no: "", entry_date: new Date().toISOString().slice(0, 10), description: "", reference: "", reference_type: "", status: "Draft", created_by: "" });
+  const [entryKind, setEntryKind] = useState<"" | "general" | "cost">("");
+  const [entryCurrency, setEntryCurrency] = useState("EGP");
+  const [entryRate, setEntryRate] = useState<number>(1);
+  const [rateManual, setRateManual] = useState(false);
+  const { user } = useAuth();
+  const isGeneral = entryKind === "general";
+  const { data: cbeQuote, isFetching: cbeLoading } = useQuery({
+    queryKey: ["je_cbe_quote", entryCurrency, form.entry_date],
+    enabled: dialogOpen && !!user && isGeneral && entryCurrency !== "EGP",
+    queryFn: async () => {
+      await supabase.functions.invoke("sync-cbe-rates").catch(() => null);
+      const { data, error } = await supabase.rpc("treasury_cbe_quote" as any, { _currency: entryCurrency, _date: form.entry_date });
+      if (error) throw error;
+      return data as { buy_rate: number; sell_rate: number; rate_date: string } | null;
+    },
+  });
+  useEffect(() => {
+    if (entryCurrency === "EGP") { setEntryRate(1); return; }
+    if (!rateManual && cbeQuote?.buy_rate) setEntryRate(Number(cbeQuote.buy_rate));
+  }, [cbeQuote, entryCurrency, rateManual]);
   const saveTimerRef = useState<{ current: SaveTimer | null }>(() => ({ current: null }))[0];
 
   // Load lines for edit
   const loadLines = async (entryId: string) => {
     const { data } = await supabase.from("journal_entry_lines" as any).select("*").eq("entry_id", entryId).order("sort_order");
+    const rows = (data as unknown as JournalLine[]) || [];
+    const cur = rows.find(r => r.transaction_currency && r.transaction_currency !== "EGP");
+    if (cur && Number(cur.exchange_rate) > 0) {
+      const r = Number(cur.exchange_rate);
+      setEntryCurrency(cur.transaction_currency!); setEntryRate(r); setRateManual(true);
+      rows.forEach(l => { l.debit = +(Number(l.debit || 0) / r).toFixed(2); l.credit = +(Number(l.credit || 0) / r).toFixed(2); });
+    }
     setLines((data as unknown as JournalLine[])?.length ? (data as unknown as JournalLine[]) : [{ account_id: "", debit: 0, credit: 0, description: "" }]);
   };
 
@@ -173,17 +201,34 @@ export default function JournalEntriesPage() {
     const nextNo = `JE-${String(entries.length + 1).padStart(4, "0")}`;
     setForm({ entry_no: nextNo, entry_date: new Date().toISOString().slice(0, 10), description: "", reference: "", reference_type: "", status: "Draft", created_by: "" });
     setLines([{ account_id: "", debit: 0, credit: 0, description: "" }]);
+    setEntryKind(""); setEntryCurrency("EGP"); setEntryRate(1); setRateManual(false);
     setDialogOpen(true);
   };
 
   const openEdit = async (e: JournalEntry) => {
     setEditEntry(e);
     setForm({ entry_no: e.entry_no, entry_date: e.entry_date, description: e.description, reference: e.reference, reference_type: e.reference_type, status: e.status, created_by: e.created_by });
+    setEntryCurrency("EGP"); setEntryRate(1); setRateManual(false);
+    setEntryKind(e.reference_type === "general" ? "general" : "cost");
     await loadLines(e.id);
     setDialogOpen(true);
   };
 
-  const buildLinePayload = (l: Partial<JournalLine>, i: number, entryId: string) => ({
+  const buildLinePayload = (l: Partial<JournalLine>, i: number, entryId: string) => {
+    if (isGeneral) {
+      const r = entryCurrency === "EGP" ? 1 : entryRate;
+      const d = Number(l.debit) || 0, c = Number(l.credit) || 0;
+      return {
+        entry_id: entryId, account_id: l.account_id,
+        debit: +(d * r).toFixed(2), credit: +(c * r).toFixed(2),
+        description: l.description || "", sort_order: i,
+        company_id: l.company_id || null, station_id: null, service_type: null,
+        airline_id: null, supplier_id: null, flight_schedule_id: null,
+        transaction_currency: entryCurrency, transaction_amount: d || c,
+        exchange_rate: r, base_amount: +((d || c) * r).toFixed(2),
+      };
+    }
+    return {
     entry_id: entryId,
     account_id: l.account_id,
     debit: Number(l.debit) || 0,
@@ -200,12 +245,15 @@ export default function JournalEntriesPage() {
     transaction_amount: l.transaction_amount ?? null,
     exchange_rate: l.exchange_rate ?? null,
     base_amount: l.base_amount ?? null,
-  });
+    };
+  };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       const timer = saveTimerRef.current ?? startSaveTimer("JournalEntry");
       saveTimerRef.current = timer;
+      if (!entryKind) throw new Error("اختر نوع القيد (عام / تكاليف)");
+      if (isGeneral && entryCurrency !== "EGP" && !(entryRate > 0)) throw new Error("سعر الصرف غير متاح — أدخله يدوياً");
       if (!form.entry_no || !isBalanced) throw new Error("Entry must be balanced");
       const validLines = lines.filter(l => l.account_id && ((Number(l.debit) || 0) + (Number(l.credit) || 0) > 0));
       if (validLines.length < 2) throw new Error("At least 2 lines required");
@@ -224,7 +272,7 @@ export default function JournalEntriesPage() {
 
       if (editEntry) {
         await timer.timeDb("update journal_entries", () =>
-          supabase.from("journal_entries" as any).update({ ...form, total_debit: totalDebit, total_credit: totalCredit } as any).eq("id", editEntry.id),
+          supabase.from("journal_entries" as any).update({ ...form, reference_type: entryKind, total_debit: totalDebit, total_credit: totalCredit } as any).eq("id", editEntry.id),
         );
         await timer.timeDb("delete old lines", () =>
           supabase.from("journal_entry_lines" as any).delete().eq("entry_id", editEntry.id),
@@ -235,7 +283,7 @@ export default function JournalEntriesPage() {
         logAudit({ action: "update", entity_type: "journal_entry", entity_id: editEntry.id, details: { entry_no: form.entry_no, total_debit: totalDebit, total_credit: totalCredit, status: form.status } });
       } else {
         const entryId = await timer.timeDb("insert journal_entry", async () => {
-          const { data: entry, error } = await supabase.from("journal_entries" as any).insert({ ...form, total_debit: totalDebit, total_credit: totalCredit } as any).select().single();
+          const { data: entry, error } = await supabase.from("journal_entries" as any).insert({ ...form, reference_type: entryKind, total_debit: totalDebit, total_credit: totalCredit } as any).select().single();
           if (error) throw error;
           return (entry as any).id as string;
         });
@@ -325,20 +373,61 @@ export default function JournalEntriesPage() {
 
               <div className="p-5 space-y-5" dir="rtl">
                 {/* Header row: Company / Station / Date */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-4 gap-4">
                   <div>
                     <label className="text-xs text-slate-600 mb-1 block">الشركة</label>
                     <SmartDropdown options={companyOptions} value={(lines[0]?.company_id) || ""} onChange={v => setLines(ls => ls.map(l => ({ ...l, company_id: v, station_id: null })))} placeholder="اختر الشركة" />
                   </div>
-                  <div className={!stations.some((s: any) => s.company_id === lines[0]?.company_id) ? "pointer-events-none opacity-50" : ""}>
+                  <div className={!lines[0]?.company_id ? "pointer-events-none opacity-50" : ""}>
+                    <label className="text-xs text-slate-600 mb-1 block">نوع القيد</label>
+                    <Select value={entryKind} onValueChange={v => {
+                      const k = v as "general" | "cost";
+                      setEntryKind(k);
+                      if (k === "general") setLines(ls => ls.map(l => ({ ...l, station_id: null, service_type: null, airline_id: null, supplier_id: null, flight_schedule_id: null })));
+                      else { setEntryCurrency("EGP"); setEntryRate(1); setRateManual(false); }
+                    }}>
+                      <SelectTrigger><SelectValue placeholder="اختر نوع القيد" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="general">قيد عام</SelectItem>
+                        <SelectItem value="cost">قيد تكاليف</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {isGeneral ? (
+                  <div>
+                    <label className="text-xs text-slate-600 mb-1 block">العملة</label>
+                    <Select value={entryCurrency} onValueChange={v => { setEntryCurrency(v); setRateManual(false); }}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  ) : (
+                  <div className={entryKind !== "cost" || !stations.some((s: any) => s.company_id === lines[0]?.company_id) ? "pointer-events-none opacity-50 " : ""}>
                     <label className="text-xs text-slate-600 mb-1 block">المحطة</label>
                     <SmartDropdown options={stationOptions.filter(o => stations.find((s: any) => s.id === o.value)?.company_id === lines[0]?.company_id)} value={(lines[0]?.station_id) || ""} onChange={v => setLines(ls => ls.map(l => ({ ...l, station_id: v })))} placeholder="اختر المحطة" />
                   </div>
+                  )}
                   <div>
                     <label className="text-xs text-slate-600 mb-1 block">التاريخ</label>
                     <DateInput  value={form.entry_date} onChange={e => setForm({ ...form, entry_date: e.target.value })} className="bg-slate-50" />
                   </div>
                 </div>
+
+                {isGeneral && entryCurrency !== "EGP" && (
+                  <div className="rounded-md border border-amber-200 bg-amber-50 p-3 grid grid-cols-12 gap-3 items-end">
+                    <div className="col-span-4">
+                      <label className="text-xs text-slate-600 mb-1 block">سعر الصرف (البنك المركزي — شراء) {cbeQuote?.rate_date ? `· ${cbeQuote.rate_date}` : ""}</label>
+                      <Input type="number" step="0.0001" value={entryRate || ""} readOnly={!rateManual} className={rateManual ? "" : "bg-slate-100"} onChange={e => setEntryRate(Number(e.target.value))} />
+                    </div>
+                    <label className="col-span-5 flex items-center gap-2 text-xs text-slate-700">
+                      <input type="checkbox" checked={rateManual} onChange={e => setRateManual(e.target.checked)} />
+                      إيقاف الربط وإدخال السعر يدوياً
+                    </label>
+                    <div className="col-span-3 text-xs text-slate-700">
+                      {cbeLoading ? "جاري جلب السعر…" : !rateManual && !cbeQuote ? <span className="text-red-600">السعر غير متاح</span> : <>المعادل بالجنيه: <b>{(totalDebit * entryRate).toLocaleString(undefined, { maximumFractionDigits: 2 })}</b></>}
+                    </div>
+                  </div>
+                )}
 
                 {/* Description */}
                 <div>
@@ -355,26 +444,30 @@ export default function JournalEntriesPage() {
                       <div key={i} className="rounded-lg border border-slate-200 bg-slate-50/60 p-3 space-y-3">
                         {/* Row 1: Account + Service Type */}
                         <div className="grid grid-cols-12 gap-3 items-end">
-                          <div className="col-span-8">
+                          <div className={isGeneral ? "col-span-12" : "col-span-8"}>
                             <label className="text-xs text-slate-600 mb-1 block">البند / الحساب — رقم أو اسم</label>
                             <div className={isAccount8 ? "ring-2 ring-amber-300 rounded-md" : ""}>
                               <SmartDropdown
-                                options={leafAccounts.map(a => ({ value: a.id, label: `${a.code} — ${a.name}`, sub: a.account_type }))}
+                                options={(isGeneral ? leafAccounts.filter(a => !String(a.code || "").startsWith("8")) : leafAccounts).map(a => ({ value: a.id, label: `${a.code} — ${a.name}`, sub: a.account_type }))}
                                 value={line.account_id || ""}
                                 onChange={v => updateLine(i, "account_id", v)}
                                 placeholder="ابحث بالرقم أو الاسم"
                               />
                             </div>
                           </div>
-                          <div className="col-span-4">
+                          {!isGeneral && <div className="col-span-4">
                             <label className="text-xs text-slate-600 mb-1 block">نوع الخدمة</label>
                             <SmartDropdown options={serviceTypeOptions} value={line.service_type || ""} onChange={v => updateLine(i, "service_type", v)} placeholder="اختر الخدمة" />
-                          </div>
+                          </div>}
                         </div>
 
                         {/* Row 2: Airline / Currency / Debit / Credit */}
                         <div className="grid grid-cols-12 gap-3 items-end">
-                          <div className="col-span-3">
+                          {isGeneral && <div className="col-span-5">
+                            <label className="text-xs text-slate-600 mb-1 block">شرح السطر</label>
+                            <Input value={line.description || ""} onChange={e => updateLine(i, "description", e.target.value)} />
+                          </div>}
+                          {!isGeneral && <><div className="col-span-3">
                             <label className="text-xs text-slate-600 mb-1 block">شركة الطيران</label>
                             <SmartDropdown options={airlineOptions} value={line.airline_id || ""} onChange={v => updateLine(i, "airline_id", v)} placeholder="اختر الشركة" />
                           </div>
@@ -384,13 +477,13 @@ export default function JournalEntriesPage() {
                               <SelectTrigger><SelectValue /></SelectTrigger>
                               <SelectContent>{CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                             </Select>
-                          </div>
+                          </div></>}
                           <div className="col-span-3">
-                            <label className="text-xs text-slate-600 mb-1 block">مدين</label>
+                            <label className="text-xs text-slate-600 mb-1 block">مدين{isGeneral ? ` (${entryCurrency})` : ""}</label>
                             <Input type="number" className="text-right" value={line.debit || ""} onChange={e => updateLine(i, "debit", e.target.value)} placeholder="0.00" />
                           </div>
                           <div className="col-span-3">
-                            <label className="text-xs text-slate-600 mb-1 block">دائن</label>
+                            <label className="text-xs text-slate-600 mb-1 block">دائن{isGeneral ? ` (${entryCurrency})` : ""}</label>
                             <Input type="number" className="text-right" value={line.credit || ""} onChange={e => updateLine(i, "credit", e.target.value)} placeholder="0.00" />
                           </div>
                           <div className="col-span-1 flex justify-end">
@@ -403,7 +496,7 @@ export default function JournalEntriesPage() {
 
 
                         {/* Account-8 rule: auto-open flight-data panel binding flight + airline + 4 cost centres */}
-                        {isAccount8 && (() => {
+                        {isAccount8 && !isGeneral && (() => {
                           const headerStationId = (lines[0]?.station_id as string) || null;
                           const stationCode = headerStationId ? stationCodeById[headerStationId] : "";
                           const flightOpts = buildFlightOptions(headerStationId);
@@ -461,7 +554,7 @@ export default function JournalEntriesPage() {
                       saveTimerRef.current = t;
                       setForm(f => ({ ...f, status: "Posted" }));
                       saveMutation.mutate();
-                    }} disabled={!isBalanced || missingFlightLink || saveMutation.isPending}>
+                    }} disabled={!entryKind || !isBalanced || (!isGeneral && missingFlightLink) || saveMutation.isPending}>
                       {saveMutation.isPending ? "جاري الحفظ…" : "حفظ وترحيل"}
                     </Button>
                   </div>

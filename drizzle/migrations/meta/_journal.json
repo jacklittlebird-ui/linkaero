@@ -197,6 +197,13 @@
       "when": 1794911053693,
       "tag": "0027_sync_airports_to_finance_stations",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794911514942,
+      "tag": "0028_admin_reset_treasury_vouchers_fn",
+      "breakpoints": true
     }
   ]
 }

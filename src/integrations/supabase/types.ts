@@ -13747,6 +13747,7 @@ export type Database = {
         Args: { _invoice_id: string; _salesperson_id: string }
         Returns: number
       }
+      admin_reset_treasury_vouchers: { Args: never; Returns: Json }
       apply_credit_note_to_invoice: { Args: { _id: string }; Returns: string }
       apply_debit_note_to_vendor_invoice: {
         Args: { _id: string }

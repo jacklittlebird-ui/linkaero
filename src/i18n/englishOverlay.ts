@@ -3,6 +3,17 @@
 // Skips inputs and elements marked [data-no-translate]. Data typed by users
 // (e.g. Arabic chart-of-account names) is left untouched only if not matched.
 const PAIRS: Array<[string, string]> = [
+  ["سعر الصرف (البنك المركزي — شراء)", "Exchange rate (CBE — buying)"],
+  ["اختر نوع القيد (عام / تكاليف)", "Select the entry type (general / cost)"],
+  ["سعر الصرف غير متاح — أدخله يدوياً", "Exchange rate unavailable — enter it manually"],
+  ["إيقاف الربط وإدخال السعر يدوياً", "Disable link and enter rate manually"],
+  ["اختر نوع القيد", "Select entry type"],
+  ["جاري جلب السعر…", "Fetching rate…"],
+  ["السعر غير متاح", "Rate unavailable"],
+  ["قيد تكاليف", "Cost entry"],
+  ["نوع القيد", "Entry type"],
+  ["شرح السطر", "Line note"],
+  ["قيد عام", "General entry"],
   ["البنود مدينة، العهدة دائنة) ويعود الفرق إلى رصيد الخزينة", "lines debit, custody credit) and the difference returns to the cash balance"],
   ["نموذج بيانات الرحلة لربط التكلفة برقم الرحلة وشركة الطيران وكل مراكز التكلفة الأربعة", "Flight data form linking the cost to flight number, airline and all four cost centers"],
   ["من إيصالات صرف التكلفة في الخزينة التي تحمل رقم رحلة وتاريخها", "from treasury cost vouchers that carry a flight number and date"],
