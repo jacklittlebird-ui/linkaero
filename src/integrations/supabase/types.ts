@@ -14590,6 +14590,7 @@ export type Database = {
         | "general_accounts"
         | "accountant"
         | "viewer"
+        | "treasury"
       cheque_status: "issued" | "sent" | "cleared" | "bounced" | "cancelled"
       clearance_status:
         | "Pending"
@@ -14828,6 +14829,7 @@ export const Constants = {
         "general_accounts",
         "accountant",
         "viewer",
+        "treasury",
       ],
       cheque_status: ["issued", "sent", "cleared", "bounced", "cancelled"],
       clearance_status: [
