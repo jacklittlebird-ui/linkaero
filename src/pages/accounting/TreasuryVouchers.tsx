@@ -601,8 +601,8 @@ export default function TreasuryVouchersPage() {
         throw new Error("رقم الرحلة وتاريخها إلزاميان للحسابات التي تبدأ بـ 8");
       if (form.movement_kind === "customer" && !form.party_name.trim())
         throw new Error("اكتب اسم العميل / Customer name is required");
-      if (form.movement_kind === "customer" && !form.on_account && !form.invoice_id)
-        throw new Error("اختر الفاتورة المحصلة أو حدد دفعة تحت الحساب");
+      if (form.movement_kind === "customer" && !form.on_account && !form.invoice_id && !form.reference?.trim())
+        throw new Error("اختر الفاتورة المحصلة أو اكتب رقمها أو حدد دفعة تحت الحساب");
       if (form.movement_kind === "supplier" && !form.on_account && !form.vendor_invoice_id)
         throw new Error("اختر فاتورة المورد أو حدد دفعة تحت الحساب");
 
@@ -1363,6 +1363,14 @@ export default function TreasuryVouchersPage() {
                 {!form.on_account && form.movement_kind === "customer" && (
                   <div>
                     <Label>الفاتورة المحصلة</Label>
+                    <Input className="mb-2" aria-label="رقم الفاتورة يدوياً" value={form.reference ?? ""}
+                      onChange={(e) => {
+                        const typed = e.target.value;
+                        const match = openInvoices.find((i) => String(i.invoice_no ?? "").trim().toLowerCase() === typed.trim().toLowerCase());
+                        setForm({ ...form, reference: typed, invoice_id: match?.id ?? "",
+                          party_name: form.party_name || match?.operator || "" });
+                      }} />
+                    <p className="mb-2 text-xs text-muted-foreground">اكتب رقم الفاتورة يدوياً أو اخترها من القائمة.</p>
                     <Select value={form.invoice_id} onValueChange={(v) => {
                       const inv = openInvoices.find((i) => i.id === v);
                       setForm({ ...form, invoice_id: v, party_name: form.party_name || inv?.operator || "",
