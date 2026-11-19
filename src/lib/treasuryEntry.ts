@@ -5,6 +5,20 @@ export interface SearchableTreasuryAccount {
   name_ar: string | null;
 }
 
+const TREASURY_TABS = ["receipt", "general", "pending_custody", "advance", "cost", "balances", "fx"] as const;
+export type TreasuryTab = typeof TREASURY_TABS[number];
+
+export function treasuryTabFromParams(params: URLSearchParams): TreasuryTab {
+  const tab = params.get("tab");
+  return TREASURY_TABS.find((value) => value === tab) ?? "receipt";
+}
+
+export function treasuryTabParams(params: URLSearchParams, tab: TreasuryTab): URLSearchParams {
+  const next = new URLSearchParams(params);
+  next.set("tab", tab);
+  return next;
+}
+
 export function normalizeAccountSearch(value: string): string {
   return value.toLowerCase().normalize("NFKD")
     .replace(/[\u064B-\u065F\u0670\u0640]/g, "")

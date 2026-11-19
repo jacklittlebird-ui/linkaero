@@ -26,6 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -50,14 +51,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { DateInput, CalendarButton } from "@/components/ui/date-input";
 import linkAeroLogo from "@/assets/linkaero-logo.png";
 import { ChevronsUpDown, Check, Pencil, Trash2 } from "lucide-react";
-import { filterTreasuryAccounts, selectTreasuryRate } from "@/lib/treasuryEntry";
+import { filterTreasuryAccounts, selectTreasuryRate, treasuryTabFromParams, treasuryTabParams, type TreasuryTab } from "@/lib/treasuryEntry";
 import { costCentresComplete } from "@/lib/treasuryBalance";
 
 type VoucherType = "receipt" | "payment" | "pending";
 type PaymentSubtype = "general" | "pending_custody" | "advance" | "cost";
 type VoucherStatus =
   | "draft" | "pending_approval" | "approved" | "posted" | "settled" | "void";
-type TabKey = "receipt" | "general" | "pending_custody" | "advance" | "cost" | "balances" | "fx";
+type TabKey = TreasuryTab;
 
 // Editing is allowed only before posting to the ledger.
 const EDITABLE_STATUSES: VoucherStatus[] = ["draft", "pending_approval", "approved"];
@@ -341,10 +342,8 @@ function AccountPicker({
 export default function TreasuryVouchersPage() {
   const qc = useQueryClient();
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<TabKey>(
-    (searchParams.get("tab") as TabKey) || "receipt",
-  );
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = treasuryTabFromParams(searchParams);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [numberRequest, setNumberRequest] = useState(0);
   const [form, setForm] = useState(emptyForm(null));
@@ -529,12 +528,13 @@ export default function TreasuryVouchersPage() {
       return (data ?? []) as any[];
     },
   });
-  const { data: openVendorInvoices = [] } = useQuery({
+  const { data: openVendorInvoices = [], isLoading: vendorInvoicesLoading, isError: vendorInvoicesError } = useQuery({
     queryKey: ["tv_open_vendor_invoices"],
     queryFn: async () => {
-      const { data } = await supabase.from("vendor_invoices")
+      const { data, error } = await supabase.from("vendor_invoices")
         .select("id,invoice_no,vendor_name,total,currency,status")
         .not("status", "in", "(Paid,Cancelled)").order("date", { ascending: false }).limit(500);
+      if (error) throw error;
       return (data ?? []) as any[];
     },
   });
@@ -836,7 +836,7 @@ export default function TreasuryVouchersPage() {
   const openCreate = (tab: TabKey) => {
     const subtype: PaymentSubtype | null =
       tab === "receipt" || tab === "balances" || tab === "fx" ? null : (tab as PaymentSubtype);
-    setActiveTab(tab === "balances" || tab === "fx" ? "receipt" : tab);
+    setSearchParams((params) => treasuryTabParams(params, tab === "balances" || tab === "fx" ? "receipt" : tab));
     setEditing(null);
     setForm(emptyForm(subtype));
     setNumberRequest((request) => request + 1);
@@ -944,7 +944,7 @@ export default function TreasuryVouchersPage() {
           <CardContent><div className="text-2xl font-bold text-rose-600">{num(kpis.outstandingAdvances)}</div></CardContent></Card>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)}>
+      <Tabs value={activeTab} onValueChange={(v) => setSearchParams((params) => treasuryTabParams(params, v as TabKey))}>
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <TabsList className="flex-wrap h-auto">
             {TAB_META.map((t) => (
@@ -1355,11 +1355,13 @@ export default function TreasuryVouchersPage() {
 
             {(form.movement_kind === "customer" || form.movement_kind === "supplier") && (form.payment_subtype === null || isGeneral) && (
               <div className="col-span-2 rounded border p-3 space-y-2">
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={form.on_account}
-                    onChange={(e) => setForm({ ...form, on_account: e.target.checked, invoice_id: "", vendor_invoice_id: "" })} />
+                <div className="flex items-center gap-2 text-sm">
+                  <Checkbox id="voucher-on-account" checked={form.on_account}
+                    onCheckedChange={(checked) => setForm((f) => ({ ...f, on_account: checked === true, invoice_id: "", vendor_invoice_id: "" }))} />
+                  <Label htmlFor="voucher-on-account">
                   دفعة تحت الحساب (بدون ربط بفاتورة)
-                </label>
+                  </Label>
+                </div>
                 {!form.on_account && form.movement_kind === "customer" && (
                   <div>
                     <Label>الفاتورة المحصلة</Label>
@@ -1395,7 +1397,9 @@ export default function TreasuryVouchersPage() {
                       setForm({ ...form, vendor_invoice_id: v, party_name: form.party_name || inv?.vendor_name || "",
                         reference: inv?.invoice_no ?? form.reference });
                     }}>
-                      <SelectTrigger><SelectValue placeholder="اختر فاتورة المورد" /></SelectTrigger>
+                      <SelectTrigger disabled={vendorInvoicesLoading || vendorInvoicesError || openVendorInvoices.length === 0}>
+                        <SelectValue placeholder={vendorInvoicesLoading ? "جارٍ تحميل فواتير الموردين" : vendorInvoicesError ? "تعذر تحميل فواتير الموردين" : openVendorInvoices.length === 0 ? "لا توجد فواتير موردين مفتوحة" : "اختر فاتورة المورد"} />
+                      </SelectTrigger>
                       <SelectContent className="max-h-72">
                         {openVendorInvoices.map((i) => (
                           <SelectItem key={i.id} value={i.id}>

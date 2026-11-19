@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Synchronize treasury receipt/payment tabs with menu links and browser history; authenticated UI verified opening payments and selecting payment on account without an invoice; no financial voucher saved.
 - [x] Print treasury movement, T-account, custody and separate advance statements together
 - [x] Require all four cost centres on cost vouchers in the form and database
 - [x] Separate advances from custody with employee-repayment settlement and balance refresh

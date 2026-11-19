@@ -1,11 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { filterTreasuryAccounts, selectTreasuryRate, treasuryRateSide } from "./treasuryEntry";
+import { filterTreasuryAccounts, selectTreasuryRate, treasuryRateSide, treasuryTabFromParams, treasuryTabParams } from "./treasuryEntry";
 
 const accounts = [
   { id: "current", code: "12110011", name: "جارى الشريك لينك مصر جنيه", name_ar: "جارى الشريك لينك مصر جنيه" },
   { id: "bank", code: "1201220001", name: "CIB", name_ar: "البنك التجارى الدولى" },
 ];
 describe("treasury entry rules", () => {
+  it("resolves receipt and payment navigation from the current URL", () => {
+    expect(treasuryTabFromParams(new URLSearchParams("tab=general"))).toBe("general");
+    expect(treasuryTabFromParams(new URLSearchParams("tab=receipt"))).toBe("receipt");
+  });
+  it("updates the tab without removing other URL parameters", () => {
+    const original = new URLSearchParams("tab=receipt&filter=draft");
+    const next = treasuryTabParams(original, "general");
+    expect(next.get("tab")).toBe("general");
+    expect(next.get("filter")).toBe("draft");
+    expect(original.get("tab")).toBe("receipt");
+  });
+  it("defaults missing or invalid tabs to receipts", () => {
+    expect(treasuryTabFromParams(new URLSearchParams())).toBe("receipt");
+    expect(treasuryTabFromParams(new URLSearchParams("tab=invalid"))).toBe("receipt");
+  });
   it("finds current accounts regardless of Arabic ya spelling", () => {
     expect(filterTreasuryAccounts(accounts, "جاري الشريك").map((a) => a.id)).toEqual(["current"]);
   });

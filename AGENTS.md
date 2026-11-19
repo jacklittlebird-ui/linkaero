@@ -1,4 +1,5 @@
 # Architecture rules
+- Treasury voucher tabs derive directly from URL search parameters and tab changes preserve other parameters; this keeps sidebar links and browser history synchronized without duplicate tab state.
 - AppLayout's workspace owns desktop intrinsic content width so headers, statistics and wide tables scroll together; mobile keeps viewport width and local table scrolling to prevent clipping.
 - Cash-box options are configured records linked to exact posting accounts in the chart, never chart IDs passed as cash-box IDs; this preserves voucher foreign keys and ledger linkage.
 - Treasury entry uses paginated posting-account loading and normalized Arabic/code search; this prevents API row caps and spelling variants hiding chart accounts.
